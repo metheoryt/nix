@@ -10,6 +10,7 @@
     telegram-desktop
     jetbrains.pycharm-professional
     windsurf
+    fastfetch
   ];
   programs.git.enable = true;
   programs.git.userName = "Maxim Romanyuk";
