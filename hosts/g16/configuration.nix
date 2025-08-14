@@ -10,17 +10,19 @@
     ];
 
   # Bootloader.
-  # boot.loader.systemd-boot.enable = true;
-  # boot.loader.efi.canTouchEfiVariables = true;
-  boot.loader.grub.enable = true;
-  boot.loader.grub.efiSupport = true;
+  # Enable systemd bootloader.
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+  # disable GRUB
+  boot.loader.grub.enable = false;
+  # boot.loader.grub.efiSupport = true;
 
-  boot.loader.grub.device = "nodev";
-  boot.loader.grub.useOSProber = true;
-  boot.loader.efi.efiSysMountPoint = "/boot";
-  boot.loader.grub.extraConfig = ''
-    GRUB_DISABLE_OS_PROBER=false
-  '';
+  # boot.loader.grub.device = "nodev";
+  # boot.loader.grub.useOSProber = true;
+  # boot.loader.efi.efiSysMountPoint = "/boot";
+  # boot.loader.grub.extraConfig = ''
+  #   GRUB_DISABLE_OS_PROBER=false
+  # '';
 
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
