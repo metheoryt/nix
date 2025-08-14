@@ -9,26 +9,59 @@
       inputs.home-manager.nixosModules.default
     ];
 
-  # Bootloader.
-  # Enable systemd bootloader.
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
-  # disable GRUB
-  boot.loader.grub.enable = false;
-  # boot.loader.grub.efiSupport = true;
-
-  # boot.loader.grub.device = "nodev";
-  # boot.loader.grub.useOSProber = true;
-  # boot.loader.efi.efiSysMountPoint = "/boot";
-  # boot.loader.grub.extraConfig = ''
-  #   GRUB_DISABLE_OS_PROBER=false
-  # '';
+  # Boot loader
+  boot.loader = {
+    systemd-boot.enable = true;
+    systemd-boot.consoleMode = "keep";
+    systemd-boot.editor = false;
+    efi.canTouchEfiVariables = true;
+    
+    # disable grub
+    grub.enable = false;
+    # grub.efiSupport = true;
+    # grub.device = "nodev";
+    # grub.useOSProber = true;
+    # efi.efiSysMountPoint = "/boot";
+    # grub.extraConfig = ''
+    #   GRUB_DISABLE_OS_PROBER=false
+    # '';
+  };
 
   # Use latest kernel.
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
-  # Enable flakes
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  # Keep EFIs separate, but add a Windows entry to *this* menu.
+  # Replace <PUT-WINDOWS-ESP-PARTUUID-HERE> with the PARTUUID of the Windows EFI partition:
+  #   sudo blkid | grep -i efi
+  boot.loader.systemd-boot.extraEntries."windows.conf" = ''
+    title   Windows 11 (other EFI)
+    device  PARTUUID=2094-41F7
+    efi     /EFI/Microsoft/Boot/bootmgfw.efi
+  '';
+
+  # Nix basics
+  nix.settings = {
+    # Enable flakes
+    experimental-features = [ "nix-command" "flakes" ];
+    auto-optimise-store = true;
+    # Community cache speeds up Home Manager & friends
+    substituters = [
+      "https://cache.nixos.org"
+      "https://nix-community.cachix.org"
+    ];
+    trusted-public-keys = [
+      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CXc6QKzJ4c3ikRykQ="
+    ];
+  };
+
+  # GC and generation hygiene
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 7d";
+  };
+  boot.loader.systemd-boot.configurationLimit = 10; # Trim old boot entries
+
 
   networking.hostName = "g16"; # Define your hostname.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -76,10 +109,25 @@
     '';
   };
 
-  # Enable supergfxd/asusctl for asus
-  services.supergfxd.enable = true;
+  # Laptop power/thermals (Intel CPU)
+  services.power-profiles-daemon.enable = true;  # Don't pair with TLP
+  services.thermald.enable = true;
+
+  # ASUS ROG: fan curves/keyboard/profiles + GPU mode switching
+  services.supergfxd.enable = true;  # integrated/dedicated/hybrid modes
   services.asusd.enable = true;
   services.asusd.enableUserService = true;
+
+  # Firmware & update support
+  hardware.enableAllFirmware = true;
+  services.fwupd.enable = true;
+
+  # ZRAM swap: fast & battery-friendly
+  zramSwap = {
+    enable = true;
+    algorithm = "zstd";
+    memoryPercent = 50;
+  };
 
   # Configure keymap in X11
   services.xserver.xkb = {
@@ -87,8 +135,12 @@
     variant = "";
   };
 
-  # Enable CUPS to print documents.
-  services.printing.enable = true;
+  # Bluetooth, printing, color profiles, local discovery
+  hardware.bluetooth.enable = true;
+  services.blueman.enable = true;
+  services.printing.enable = true;    # Enable CUPS to print documents.
+  services.colord.enable = true;
+  services.avahi = { enable = true; nssmdns4 = true; };
 
   # Enable sound with pipewire.
   services.pulseaudio.enable = false;
@@ -109,6 +161,19 @@
   # Enable touchpad support (enabled default in most desktopManager).
   # services.xserver.libinput.enable = true;
 
+  # Fonts you'll actually enjoy
+  fonts.packages = with pkgs; [
+    noto-fonts-cjk-sans 
+    noto-fonts-emoji
+    pkgs.nerd-fonts.jetbrains-mono
+    pkgs.nerd-fonts.fira-code
+  ];
+
+  # Flatpak + portals (screenshare, file pickers, etc.)
+  services.flatpak.enable = true;
+  xdg.portal.enable = true;
+  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
 
@@ -118,6 +183,8 @@
     os-prober
     vim
     wget
+    efibootmgr
+    appimage-run
   ];
 
   # Steam
