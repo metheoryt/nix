@@ -19,12 +19,6 @@
 
     # Flake utilities for better development experience
     flake-utils.url = "github:numtide/flake-utils";
-
-    # NUR (Nix User Repository) for additional packages
-    nur.url = "github:nix-community/NUR";
-
-    # Nix-colors for consistent theming
-    nix-colors.url = "github:misterio77/nix-colors";
   };
 
   outputs = {
@@ -34,8 +28,6 @@
     home-manager,
     nixos-hardware,
     flake-utils,
-    nur,
-    nix-colors,
     ...
   } @ inputs: let
     # System configuration
@@ -52,7 +44,6 @@
     # Common overlays
     overlays = [
       stableOverlay
-      nur.overlay
     ];
 
     # Common nixpkgs configuration
@@ -94,7 +85,7 @@
           home-manager.nixosModules.default
 
           # System-wide nixpkgs configuration
-          ({config, ...}: {
+          ({...}: {
             nixpkgs = nixpkgsConfig;
           })
         ];
@@ -105,14 +96,9 @@
     homeConfigurations = {
       "me@g16" = home-manager.lib.homeManagerConfiguration {
         pkgs = import nixpkgs nixpkgsConfig;
-        extraSpecialArgs =
-          specialArgs
-          // {
-            inherit nix-colors;
-          };
+        extraSpecialArgs = specialArgs;
         modules = [
           ./hosts/g16/me.nix
-          nix-colors.homeManagerModules.default
         ];
       };
     };
@@ -168,32 +154,6 @@
           uv # Fast Python package manager
           ruff # Fast Python linter
           black # Python formatter
-        ];
-      };
-
-      # Web development shell
-      web = nixpkgs.legacyPackages.${system}.mkShell {
-        name = "web-dev";
-        packages = with nixpkgs.legacyPackages.${system}; [
-          nodejs_22
-          nodePackages.npm
-          nodePackages.yarn
-          nodePackages.pnpm
-          nodePackages.typescript
-          nodePackages.eslint
-          nodePackages.prettier
-        ];
-      };
-
-      # Rust development shell
-      rust = nixpkgs.legacyPackages.${system}.mkShell {
-        name = "rust-dev";
-        packages = with nixpkgs.legacyPackages.${system}; [
-          rustc
-          cargo
-          rustfmt
-          clippy
-          rust-analyzer
         ];
       };
     };
@@ -257,26 +217,26 @@
       home-manager-config = self.homeConfigurations."me@g16".activationPackage;
     };
 
-    # Templates for creating new configurations
-    templates = {
-      # Basic NixOS configuration template
-      basic = {
-        path = ./templates/basic;
-        description = "Basic NixOS configuration template";
-      };
+    # Templates for creating new configurations (TODO: implement)
+    # templates = {
+    #   # Basic NixOS configuration template
+    #   basic = {
+    #     path = ./templates/basic;
+    #     description = "Basic NixOS configuration template";
+    #   };
 
-      # Laptop configuration template
-      laptop = {
-        path = ./templates/laptop;
-        description = "Laptop-optimized NixOS configuration template";
-      };
+    #   # Laptop configuration template
+    #   laptop = {
+    #     path = ./templates/laptop;
+    #     description = "Laptop-optimized NixOS configuration template";
+    #   };
 
-      # Gaming configuration template
-      gaming = {
-        path = ./templates/gaming;
-        description = "Gaming-optimized NixOS configuration template";
-      };
-    };
+    #   # Gaming configuration template
+    #   gaming = {
+    #     path = ./templates/gaming;
+    #     description = "Gaming-optimized NixOS configuration template";
+    #   };
+    # };
 
     # Apps - executable applications
     apps.${system} = {
@@ -284,12 +244,20 @@
       default = {
         type = "app";
         program = "${self.packages.${system}.update-system}/bin/update-system";
+        meta = {
+          description = "Update and rebuild NixOS system";
+          longDescription = "Updates flake inputs and rebuilds the NixOS system configuration";
+        };
       };
 
       # Install app
       install = {
         type = "app";
         program = "${self.packages.${system}.nixos-installer}/bin/install-nixos";
+        meta = {
+          description = "Install NixOS configuration";
+          longDescription = "Clone and install this NixOS configuration on the current system";
+        };
       };
     };
   };

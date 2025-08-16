@@ -1,5 +1,4 @@
 {
-  config,
   pkgs,
   lib,
   ...
@@ -207,6 +206,12 @@
 
     # Boot management
     efibootmgr
+
+    # Command runner
+    just
+
+    # Home Manager CLI
+    home-manager
   ];
 
   # System state version

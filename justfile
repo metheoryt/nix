@@ -24,6 +24,7 @@ default:
     @echo "Development:"
     @echo "  just fmt       - Format all Nix files"
     @echo "  just check     - Check configuration syntax"
+    @echo "  just quick     - Quick configuration validation"
     @echo "  just shell     - Enter development shell"
     @echo ""
     @echo "System Info:"
@@ -72,11 +73,12 @@ upgrade:
     just switch
     @echo "🎉 System upgrade complete!"
 
-# Switch Home Manager configuration
+# Switch Home Manager configuration (via system rebuild)
 hm-switch:
     @echo "🏠 Switching Home Manager configuration..."
-    home-manager switch --flake {{flake_dir}}#me@{{hostname}}
-    @echo "✅ Home Manager switched successfully!"
+    @echo "Note: Home Manager is managed as NixOS module, rebuilding system..."
+    sudo nixos-rebuild switch --flake {{flake_dir}}#{{hostname}}
+    @echo "✅ Home Manager updated via system rebuild!"
 
 # Clean old generations and garbage collect
 clean:
@@ -115,6 +117,11 @@ check:
     nix flake check {{flake_dir}}
     @echo "✅ Configuration check passed!"
 
+# Quick configuration check
+quick:
+    @echo "🔍 Running quick configuration check..."
+    ./quick-check.sh
+
 # Enter development shell
 shell:
     @echo "🐚 Entering development shell..."
@@ -127,7 +134,7 @@ status:
     @echo "Hostname: $(hostname)"
     @echo "Kernel: $(uname -r)"
     @echo "NixOS Version: $(nixos-version)"
-    @echo "Uptime: $(uptime -p)"
+    @echo "Uptime: $(uptime)"
     @echo ""
     @echo "💾 Memory Usage:"
     free -h
@@ -163,9 +170,9 @@ generations:
     @echo "====================="
     sudo nix-env --list-generations --profile /nix/var/nix/profiles/system
     @echo ""
-    @echo "🏠 Home Manager Generations"
-    @echo "==========================="
-    home-manager generations
+    @echo "🏠 Home Manager Status"
+    @echo "======================"
+    systemctl --user status home-manager-me.service --no-pager || echo "Home Manager service not active"
 
 # Show flake info
 info:
@@ -226,32 +233,30 @@ health:
     @echo "🏥 System Health Check"
     @echo "======================"
     @echo "Checking Nix store..."
-    if nix-store --verify --check-contents >/dev/null 2>&1; then
-        echo "✅ Nix store is healthy"
-    else
-        echo "❌ Nix store has issues"
+    @if nix-store --verify --check-contents >/dev/null 2>&1; then \
+        echo "✅ Nix store is healthy"; \
+    else \
+        echo "❌ Nix store has issues"; \
     fi
-
     @echo "Checking systemd services..."
-    if systemctl --failed --quiet; then
-        echo "❌ Some systemd services have failed:"
-        systemctl --failed --no-pager
-    else
-        echo "✅ All systemd services are running"
+    @if systemctl --failed --quiet; then \
+        echo "❌ Some systemd services have failed:"; \
+        systemctl --failed --no-pager; \
+    else \
+        echo "✅ All systemd services are running"; \
     fi
-
     @echo "Checking disk space..."
-    if [ $(df / | awk 'NR==2 {print $5}' | sed 's/%//') -gt 90 ]; then
-        echo "⚠️ Root filesystem is over 90% full"
-    else
-        echo "✅ Disk space is adequate"
+    @if [ $$(df / | awk 'NR==2 {print $$5}' | sed 's/%//') -gt 90 ]; then \
+        echo "⚠️ Root filesystem is over 90% full"; \
+    else \
+        echo "✅ Disk space is adequate"; \
     fi
 
 # Backup current configuration
 backup:
     @echo "💾 Backing up current configuration..."
-    sudo cp -r /etc/nixos /etc/nixos.backup.$(date +%Y%m%d_%H%M%S)
-    @echo "✅ Backup created in /etc/nixos.backup.$(date +%Y%m%d_%H%M%S)"
+    cp -r {{flake_dir}} {{flake_dir}}.backup.$(date +%Y%m%d_%H%M%S)
+    @echo "✅ Backup created in {{flake_dir}}.backup.$(date +%Y%m%d_%H%M%S)"
 
 # Show package search
 search PACKAGE:

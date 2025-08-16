@@ -1,9 +1,4 @@
-{
-  config,
-  pkgs,
-  lib,
-  ...
-}: {
+{pkgs, ...}: {
   # Steam configuration
   programs.steam = {
     enable = true;
@@ -150,7 +145,7 @@
 
     # Controller support
     antimicrox
-    qjoypad
+    # qjoypad # Package might not be available
 
     # Performance monitoring
     nvtop
@@ -158,7 +153,7 @@
 
     # Audio tools for gaming
     pavucontrol
-    pulseeffects-legacy
+    easyeffects # Replacement for pulseeffects-legacy
 
     # Screen capture and streaming
     obs-studio
@@ -168,10 +163,10 @@
     # Communication
     discord
     mumble
-    teamspeak_client
+    # teamspeak_client # Package might not be available
 
     # Game-specific tools
-    minecraft
+    prismlauncher # Minecraft launcher
 
     # System optimization
     gamemode
@@ -190,20 +185,20 @@
     xpadneo.enable = true;
 
     # PlayStation controller support
-    # (handled by kernel modules)
+    # (handled by kernel modules automatically)
   };
 
   # System optimizations for gaming
   boot = {
-    # Kernel parameters for gaming performance
-    kernelParams = [
-      "mitigations=off" # Disable security mitigations for performance (use with caution)
-      # "processor.max_cstate=1" # Reduce CPU latency (may increase power usage)
-      # "intel_idle.max_cstate=0" # Disable deep sleep states for lower latency
-    ];
+    # Kernel parameters for gaming performance (commented out to avoid conflicts)
+    # kernelParams = [
+    #   "mitigations=off" # Disable security mitigations for performance (use with caution)
+    #   # "processor.max_cstate=1" # Reduce CPU latency (may increase power usage)
+    #   # "intel_idle.max_cstate=0" # Disable deep sleep states for lower latency
+    # ];
 
-    # Use performance-oriented kernel
-    kernelPackages = lib.mkDefault pkgs.linuxPackages_zen;
+    # Use performance-oriented kernel (managed by base system configuration)
+    # kernelPackages = lib.mkDefault pkgs.linuxPackages_zen;
   };
 
   # Gaming-optimized system settings
@@ -280,8 +275,8 @@
     ];
   };
 
-  # User groups for gaming
-  users.groups.gamemode = {};
+  # User groups for gaming (gamemode group is created automatically)
+  # users.groups.gamemode = {};
 
   # Services for gaming
   services = {

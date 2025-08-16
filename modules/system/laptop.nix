@@ -1,5 +1,4 @@
 {
-  config,
   pkgs,
   lib,
   ...
@@ -95,13 +94,13 @@
     };
 
     # CPU microcode updates
-    cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+    cpu.intel.updateMicrocode = lib.mkDefault true;
   };
 
   # Laptop-specific environment variables
   environment.variables = {
     # Better Intel graphics performance
-    VDPAU_DRIVER = "va_gl";
+    VDPAU_DRIVER = lib.mkDefault "va_gl";
   };
 
   # Additional laptop packages

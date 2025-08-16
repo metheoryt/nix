@@ -7,7 +7,7 @@ A comprehensive, modular NixOS configuration with Home Manager integration, opti
 - **Modular Architecture**: Clean separation of concerns with reusable modules
 - **NVIDIA Support**: Optimized hybrid graphics with Intel/NVIDIA PRIME
 - **Gaming Ready**: Steam, GameMode, MangoHud, and gaming optimizations
-- **Development Environment**: Multiple language support, Docker, and development tools
+- **Development Environment**: Python development, Docker, and essential development tools
 - **Laptop Optimized**: Power management, thermal control, and ASUS ROG features
 - **Modern Desktop**: GNOME with Wayland, fractional scaling, and customizations
 - **Automated Management**: Justfile commands for easy system maintenance
@@ -172,17 +172,13 @@ GNOME settings are managed via dconf in `hosts/g16/me.nix`:
 #### Available Shells
 ```bash
 nix develop .#python    # Python development
-nix develop .#web       # Web development (Node.js)
-nix develop .#rust      # Rust development
 ```
 
 #### Programming Languages
 Enabled by default:
 - Python 3.12 with UV package manager
-- Node.js 22 with npm, yarn, pnpm
-- Rust with Cargo and tooling
 
-Add more in `modules/programs/development.nix`.
+Add more languages in `modules/programs/development.nix` as needed.
 
 ### Gaming Setup
 
@@ -271,7 +267,8 @@ home-manager switch --flake .#me@g16
 just backup
 
 # Restore from backup if needed
-sudo cp -r /etc/nixos.backup.* /etc/nixos
+cp -r ~/nix.backup.* ~/nix-restored
+cd ~/nix-restored
 ```
 
 ## 📚 Learning Resources

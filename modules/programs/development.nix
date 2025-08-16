@@ -1,9 +1,4 @@
-{
-  config,
-  pkgs,
-  lib,
-  ...
-}: {
+{pkgs, ...}: {
   # Development tools and environments
   environment.systemPackages = with pkgs; [
     # Version control
@@ -65,52 +60,19 @@
     unzip
     zip
     p7zip
-    tar
+    gnutar
 
     # Development libraries
     openssl
     zlib
     libxml2
     libxslt
-  ];
 
-  # Python development environment
-  environment.systemPackages = with pkgs; [
+    # Python development environment
     python312
     python312Packages.pip
     python312Packages.virtualenv
     uv # Fast Python package manager
-  ];
-
-  # Node.js development
-  environment.systemPackages = with pkgs; [
-    nodejs_22
-    nodePackages.npm
-    nodePackages.yarn
-    nodePackages.pnpm
-  ];
-
-  # Rust development
-  environment.systemPackages = with pkgs; [
-    rustc
-    cargo
-    rustfmt
-    clippy
-    rust-analyzer
-  ];
-
-  # Go development
-  environment.systemPackages = with pkgs; [
-    go
-    gopls
-    delve # Go debugger
-  ];
-
-  # Java development
-  environment.systemPackages = with pkgs; [
-    openjdk17
-    maven
-    gradle
   ];
 
   # Docker support
@@ -123,12 +85,12 @@
     };
   };
 
-  # Podman as Docker alternative
-  virtualisation.podman = {
-    enable = true;
-    dockerCompat = true;
-    defaultNetwork.settings.dns_enabled = true;
-  };
+  # Podman as Docker alternative (disabled to avoid conflict with Docker)
+  # virtualisation.podman = {
+  #   enable = true;
+  #   dockerCompat = true;
+  #   defaultNetwork.settings.dns_enabled = true;
+  # };
 
   # Enable AppImage support
   programs.appimage = {
@@ -165,7 +127,9 @@
 
   # Development fonts
   fonts.packages = with pkgs; [
-    (nerdfonts.override {fonts = ["FiraCode" "JetBrainsMono" "Hack"];})
+    nerd-fonts.fira-code
+    nerd-fonts.jetbrains-mono
+    nerd-fonts.hack
     fira-code
     fira-code-symbols
   ];
@@ -181,19 +145,24 @@
   # User groups for development
   users.groups.docker = {};
 
-  # Development services
-  services = {
-    # PostgreSQL for development
-    postgresql = {
-      enable = false; # Enable per project needs
-      package = pkgs.postgresql_15;
-      enableTCPIP = true;
-    };
+  # Development services (commented out by default - enable per project needs)
+  # services = {
+  #   # PostgreSQL for development
+  #   postgresql = {
+  #     enable = true;
+  #     package = pkgs.postgresql_15;
+  #     enableTCPIP = true;
+  #     authentication = pkgs.lib.mkOverride 10 ''
+  #       local all all trust
+  #       host all all 127.0.0.1/32 trust
+  #       host all all ::1/128 trust
+  #     '';
+  #   };
 
-    # Redis for development
-    redis.servers.development = {
-      enable = false; # Enable per project needs
-      port = 6379;
-    };
-  };
+  #   # Redis for development
+  #   redis.servers.development = {
+  #     enable = true;
+  #     port = 6379;
+  #   };
+  # };
 }

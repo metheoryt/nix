@@ -1,6 +1,5 @@
 {
   config,
-  lib,
   pkgs,
   ...
 }: {
@@ -54,8 +53,8 @@
       # sync.enable = true;
 
       # Find your GPU bus IDs with: lspci | grep -E "VGA|3D"
-      intelBusId = "PCI:0:2:0";
-      nvidiaBusId = "PCI:1:0:0";
+      intelBusId = "PCI:00:02:0";
+      nvidiaBusId = "PCI:01:00:0";
     };
 
     # Use stable driver by default
@@ -139,11 +138,11 @@
   # System packages for NVIDIA support
   environment.systemPackages = with pkgs; [
     # NVIDIA tools
-    nvtop # NVIDIA GPU monitoring
-    nvidia-docker # Docker with NVIDIA support
+    # nvtop # NVIDIA GPU monitoring (package may not be available)
+    # nvidia-docker # Docker with NVIDIA support (deprecated)
 
     # GPU monitoring and control
-    nvitop
+    # nvitop # Package may not be available
 
     # CUDA development (optional, uncomment if needed)
     # cudatoolkit
@@ -162,65 +161,20 @@
     ffmpeg-full
   ];
 
-  # Services for GPU management
-  services = {
-    # Xorg configuration
-    xserver = {
-      # Screen tearing prevention
-      screenSection = ''
-        Option "metamodes" "nvidia-auto-select +0+0 {ForceFullCompositionPipeline=On}"
-        Option "AllowIndirectGLXProtocol" "off"
-        Option "TripleBuffer" "on"
-      '';
-    };
-
-    # Automatic GPU switching (for laptops)
-    # supergfxd.enable = true; # Usually enabled in main config for ROG laptops
-  };
+  # Xorg configuration for NVIDIA
+  services.xserver.screenSection = ''
+    Option "metamodes" "nvidia-auto-select +0+0 {ForceFullCompositionPipeline=On}"
+    Option "AllowIndirectGLXProtocol" "off"
+    Option "TripleBuffer" "on"
+  '';
 
   # Virtualization with GPU passthrough support
-  virtualisation.docker = {
-    enableNvidia = true; # Enable NVIDIA container runtime
-  };
+  hardware.nvidia-container-toolkit.enable = true;
 
-  # Security settings for NVIDIA
-  security.wrappers.nvidia-smi = {
-    owner = "root";
-    group = "root";
-    capabilities = "cap_sys_admin+ep";
-    source = "${config.hardware.nvidia.package.bin}/bin/nvidia-smi";
-  };
+  # Security settings for NVIDIA (nvidia-smi is available system-wide by default)
 
-  # Systemd services for better power management
-  systemd.services.nvidia-suspend = {
-    description = "NVIDIA GPU suspend";
-    before = ["systemd-suspend.service"];
-    wantedBy = ["systemd-suspend.service"];
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${config.hardware.nvidia.package.bin}/bin/nvidia-sleep.sh suspend";
-    };
-  };
-
-  systemd.services.nvidia-resume = {
-    description = "NVIDIA GPU resume";
-    after = ["systemd-suspend.service"];
-    wantedBy = ["systemd-suspend.service"];
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${config.hardware.nvidia.package.bin}/bin/nvidia-sleep.sh resume";
-    };
-  };
-
-  systemd.services.nvidia-hibernate = {
-    description = "NVIDIA GPU hibernate";
-    before = ["systemd-hibernate.service"];
-    wantedBy = ["systemd-hibernate.service"];
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${config.hardware.nvidia.package.bin}/bin/nvidia-sleep.sh hibernate";
-    };
-  };
+  # Systemd services for better power management are handled by base NixOS NVIDIA module
+  # when hardware.nvidia.powerManagement.enable = true; is set
 
   # Udev rules for NVIDIA
   services.udev.extraRules = ''

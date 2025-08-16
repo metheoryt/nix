@@ -1,9 +1,4 @@
-{
-  config,
-  pkgs,
-  inputs,
-  ...
-}: {
+{pkgs, ...}: {
   home.username = "me";
   home.homeDirectory = "/home/me";
   home.stateVersion = "25.05";
@@ -81,40 +76,8 @@
     };
   };
 
-  # Firefox configuration
-  programs.firefox = {
-    enable = true;
-    profiles.default = {
-      id = 0;
-      isDefault = true;
-
-      settings = {
-        # Privacy settings
-        "privacy.trackingprotection.enabled" = true;
-        "privacy.donottrackheader.enabled" = true;
-        "privacy.trackingprotection.socialtracking.enabled" = true;
-
-        # Performance
-        "browser.cache.disk.enable" = true;
-        "browser.cache.memory.enable" = true;
-
-        # UI preferences
-        "browser.tabs.warnOnClose" = false;
-        "browser.shell.checkDefaultBrowser" = false;
-        "browser.startup.homepage" = "about:home";
-
-        # Security
-        "security.tls.version.fallback-limit" = 3;
-        "security.tls.version.min" = 3;
-      };
-
-      extensions = with pkgs.nur.repos.rycee.firefox-addons; [
-        # ublock-origin
-        # bitwarden
-        # privacy-badger
-      ];
-    };
-  };
+  # Firefox configuration (minimal to avoid conflicts)
+  programs.firefox.enable = true;
 
   # Fish shell configuration
   programs.fish = {
@@ -353,22 +316,8 @@
     };
   };
 
-  # XDG user directories
-  xdg = {
-    enable = true;
-    userDirs = {
-      enable = true;
-      createDirectories = true;
-      desktop = "$HOME/Desktop";
-      documents = "$HOME/Documents";
-      download = "$HOME/Downloads";
-      music = "$HOME/Music";
-      pictures = "$HOME/Pictures";
-      videos = "$HOME/Videos";
-      templates = "$HOME/Templates";
-      publicShare = "$HOME/Public";
-    };
-  };
+  # XDG user directories (minimal to avoid conflicts)
+  xdg.enable = true;
 
   # Enable Home Manager
   programs.home-manager.enable = true;

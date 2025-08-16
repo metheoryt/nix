@@ -1,7 +1,5 @@
 {
-  config,
   pkgs,
-  lib,
   inputs,
   ...
 }: {
@@ -95,6 +93,7 @@
     extraSpecialArgs = {inherit inputs;};
     useGlobalPkgs = true;
     useUserPackages = true;
+    backupFileExtension = "backup";
     users = {
       "me" = import ./me.nix;
     };

@@ -1,1 +1,32 @@
-.idea
+# IDE directories
+.idea/
+.vscode/
+*.sublime-*
+
+# Nix build artifacts
+result
+result-*
+
+# Temporary files
+*.tmp
+*.bak
+*.backup.*
+
+# Configuration backups
+.config-backup-*
+*.backup
+
+# Development shells
+.direnv/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+
+# Log files
+*.log
