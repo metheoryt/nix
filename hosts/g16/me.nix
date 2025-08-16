@@ -11,6 +11,7 @@
     jetbrains.pycharm-professional
     windsurf
     fastfetch
+    uv
   ];
   programs.git.enable = true;
   programs.git.userName = "Maxim Romanyuk";
