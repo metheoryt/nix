@@ -1,6 +1,8 @@
-{ config, pkgs, ... }:
-
-{    
+{
+  config,
+  pkgs,
+  ...
+}: {
   home.username = "me";
   home.homeDirectory = "/home/me";
   home.packages = with pkgs; [
@@ -26,7 +28,7 @@
   dconf = {
     enable = true;
     settings = {
-      "org/gnome/mutter" = { experimental-features = [ "scale-monitor-framebuffer" ]; };
+      "org/gnome/mutter" = {experimental-features = ["scale-monitor-framebuffer"];};
       "org/gnome/desktop/interface" = {
         text-scaling-factor = 1.15;
       };

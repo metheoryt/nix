@@ -15,7 +15,7 @@
     systemd-boot.consoleMode = "keep";
     systemd-boot.editor = false;
     efi.canTouchEfiVariables = true;
-    
+
     # disable grub
     grub.enable = false;
     # grub.efiSupport = true;
@@ -50,7 +50,7 @@
       "https://nix-community.cachix.org"
     ];
     trusted-public-keys = [
-      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CXc6QKzJ4c3ikRykQ="
+      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
     ];
   };
 
@@ -75,7 +75,7 @@
 
   # Set your time zone.
   time.timeZone = "Asia/Almaty";
-  
+
   i18n.extraLocales = [ "en_US.UTF-8/UTF-8" ];
   # Select internationalisation properties.
   i18n.defaultLocale = "ru_RU.UTF-8";
@@ -94,7 +94,7 @@
 
   # Enable the X11 windowing system.
   services.xserver.enable = true;
-  
+
   # Enable the GNOME Desktop Environment scaling.
   services.displayManager.gdm = {
     enable = true;
@@ -163,7 +163,7 @@
 
   # Fonts you'll actually enjoy
   fonts.packages = with pkgs; [
-    noto-fonts-cjk-sans 
+    noto-fonts-cjk-sans
     noto-fonts-emoji
     pkgs.nerd-fonts.jetbrains-mono
     pkgs.nerd-fonts.fira-code
@@ -186,6 +186,8 @@
     efibootmgr
     appimage-run
     python312
+    nixd  # or nil
+    alejandra  # or nixfmt-rfc-style
   ];
 
   # Steam
