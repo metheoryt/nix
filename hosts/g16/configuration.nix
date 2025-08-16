@@ -230,6 +230,11 @@
     extraGroups = [ "networkmanager" "wheel" ];
   };
 
+  # for sublime <4200 to work
+  nixpkgs.config.permittedInsecurePackages = [
+    "openssl-1.1.1w"
+  ];
+
   home-manager = {
     extraSpecialArgs = { inherit inputs; };
     useGlobalPkgs = true;

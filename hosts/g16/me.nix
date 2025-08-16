@@ -13,6 +13,7 @@
     fastfetch
     uv
     libreoffice-qt6-fresh
+    sublime4-dev
   ];
   programs.git.enable = true;
   programs.git.userName = "Maxim Romanyuk";
