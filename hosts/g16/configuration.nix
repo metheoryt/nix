@@ -1,85 +1,37 @@
-{ config, pkgs, lib, inputs, ... }:
-
 {
-  imports =
-    [
-      # Include the results of the hardware scan.
-      ./hardware-configuration.nix
-      ../../modules/nvidia.nix
-      inputs.home-manager.nixosModules.default
-    ];
+  config,
+  pkgs,
+  lib,
+  inputs,
+  ...
+}: {
+  imports = [
+    # Hardware configuration
+    ./hardware-configuration.nix
 
-  # Boot loader
-  boot.loader = {
-    systemd-boot.enable = true;
-    systemd-boot.consoleMode = "keep";
-    systemd-boot.editor = false;
-    efi.canTouchEfiVariables = true;
+    # System modules
+    ../../modules/system/base.nix
+    ../../modules/system/laptop.nix
 
-    # disable grub
-    grub.enable = false;
-    # grub.efiSupport = true;
-    # grub.device = "nodev";
-    # grub.useOSProber = true;
-    # efi.efiSysMountPoint = "/boot";
-    # grub.extraConfig = ''
-    #   GRUB_DISABLE_OS_PROBER=false
-    # '';
-  };
+    # Desktop environment
+    ../../modules/desktop/gnome.nix
 
-  # Use latest kernel.
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+    # Hardware-specific modules
+    ../../modules/nvidia.nix
 
-  # Keep EFIs separate, but add a Windows entry to *this* menu.
-  # Replace <PUT-WINDOWS-ESP-PARTUUID-HERE> with the PARTUUID of the Windows EFI partition:
-  #   sudo blkid | grep -i efi
-  # boot.loader.systemd-boot.extraEntries."windows.conf" = ''
-  #   title   Windows 11 (other EFI)
-  #   device  PARTUUID=ea6024d4-62ff-4f86-bdac-a60e2bc93f94
-  #   efi     /EFI/Microsoft/Boot/bootmgfw.efi
-  # '';
+    # Program modules
+    ../../modules/programs/development.nix
 
-  # Nix basics
-  nix.settings = {
-    # Enable flakes
-    experimental-features = [ "nix-command" "flakes" ];
-    auto-optimise-store = true;
-    # Community cache speeds up Home Manager & friends
-    substituters = [
-      "https://cache.nixos.org"
-      "https://nix-community.cachix.org"
-    ];
-    trusted-public-keys = [
-      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-    ];
-  };
+    # Home manager
+    inputs.home-manager.nixosModules.default
+  ];
 
-  # GC and generation hygiene
-  nix.gc = {
-    automatic = true;
-    dates = "weekly";
-    options = "--delete-older-than 7d";
-  };
-  boot.loader.systemd-boot.configurationLimit = 10; # Trim old boot entries
+  # Host-specific configuration
+  networking.hostName = "g16";
 
-
-  networking.hostName = "g16"; # Define your hostname.
-  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
-
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
-
-  # Enable networking
-  networking.networkmanager.enable = true;
-
-  # Set your time zone.
+  # Localization (override defaults from base.nix)
   time.timeZone = "Asia/Almaty";
-
-  i18n.extraLocales = [ "en_US.UTF-8/UTF-8" ];
-  # Select internationalisation properties.
   i18n.defaultLocale = "ru_RU.UTF-8";
-
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "ru_RU.UTF-8";
     LC_IDENTIFICATION = "ru_RU.UTF-8";
@@ -92,153 +44,55 @@
     LC_TIME = "ru_RU.UTF-8";
   };
 
-  # Enable the X11 windowing system.
-  services.xserver.enable = true;
-
-  # Enable the GNOME Desktop Environment scaling.
-  services.displayManager.gdm = {
+  # ASUS ROG-specific services
+  services.supergfxd.enable = true; # GPU mode switching
+  services.asusd = {
     enable = true;
-    wayland = true;
-  };
-  services.desktopManager.gnome = {
-    enable = true;
-    extraGSettingsOverridePackages = [ pkgs.mutter ];
-    extraGSettingsOverrides = ''
-      [org.gnome.mutter]
-      experimental-features=['scale-monitor-framebuffer']
-    '';
+    enableUserService = true;
   };
 
-  # Laptop power/thermals (Intel CPU)
-  services.power-profiles-daemon.enable = true;  # Don't pair with TLP
-  services.thermald.enable = true;
-
-  # ASUS ROG: fan curves/keyboard/profiles + GPU mode switching
-  services.supergfxd.enable = true;  # integrated/dedicated/hybrid modes
-  services.asusd.enable = true;
-  services.asusd.enableUserService = true;
-
-  # Firmware & update support
-  hardware.enableAllFirmware = true;
-  services.fwupd.enable = true;
-
-  # ZRAM swap: fast & battery-friendly
-  zramSwap = {
-    enable = true;
-    algorithm = "zstd";
-    memoryPercent = 50;
-  };
-
-  # Configure keymap in X11
-  services.xserver.xkb = {
-    layout = "us";
-    variant = "";
-  };
-
-  # Bluetooth, printing, color profiles, local discovery
-  hardware.bluetooth.enable = true;
-  services.blueman.enable = true;
-  services.printing.enable = true;    # Enable CUPS to print documents.
-  services.colord.enable = true;
-  services.avahi = { enable = true; nssmdns4 = true; };
-
-  # Enable sound with pipewire.
-  services.pulseaudio.enable = false;
-  security.rtkit.enable = true;
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
-    pulse.enable = true;
-    # If you want to use JACK applications, uncomment this
-    #jack.enable = true;
-
-    # use the example session manager (no others are packaged yet so this is enabled by default,
-    # no need to redefine it in your config for now)
-    #media-session.enable = true;
-  };
-
-  # Enable touchpad support (enabled default in most desktopManager).
-  # services.xserver.libinput.enable = true;
-
-  # Fonts you'll actually enjoy
-  fonts.packages = with pkgs; [
-    noto-fonts-cjk-sans
-    noto-fonts-emoji
-    pkgs.nerd-fonts.jetbrains-mono
-    pkgs.nerd-fonts.fira-code
-  ];
-
-  # Flatpak + portals (screenshare, file pickers, etc.)
+  # Flatpak support
   services.flatpak.enable = true;
-  xdg.portal.enable = true;
-  xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
 
-  # Allow unfree packages
-  nixpkgs.config.allowUnfree = true;
-
-  # List packages installed in system profile. To search, run:
-  # $ nix search wget
-  environment.systemPackages = with pkgs; [
-    os-prober
-    vim
-    wget
-    efibootmgr
-    appimage-run
-    python312
-    nixd  # or nil
-    alejandra  # or nixfmt-rfc-style
-  ];
-
-  # Steam
+  # Gaming - Steam
   programs.steam = {
     enable = true;
-    remotePlay.openFirewall = true; # Open ports in the firewall for Steam Remote Play
-    dedicatedServer.openFirewall = true; # Open ports in the firewall for Source Dedicated Server
-    localNetworkGameTransfers.openFirewall = true; # Open ports in the firewall for Steam Local Network Game Transfers
+    remotePlay.openFirewall = true;
+    dedicatedServer.openFirewall = true;
+    localNetworkGameTransfers.openFirewall = true;
   };
 
-  # Some programs need SUID wrappers, can be configured further or are
-  # started in user sessions.
-  # programs.mtr.enable = true;
-  # programs.gnupg.agent = {
-  #   enable = true;
-  #   enableSSHSupport = true;
-  # };
+  # Host-specific packages
+  environment.systemPackages = with pkgs; [
+    # AppImage support
+    appimage-run
 
-  # List services that you want to enable:
+    # Development tools specific to this machine
+    python312
 
-  # Enable the OpenSSH daemon.
-  # services.openssh.enable = true;
+    # System utilities
+    os-prober
+  ];
 
-  # Open ports in the firewall.
-  # networking.firewall.allowedTCPPorts = [ ... ];
-  # networking.firewall.allowedUDPPorts = [ ... ];
-  # Or disable the firewall altogether.
-  # networking.firewall.enable = false;
-
-  # This value determines the NixOS release from which the default
-  # settings for stateful data, like file locations and database versions
-  # on your system were taken. It‘s perfectly fine and recommended to leave
-  # this value at the release version of the first install of this system.
-  # Before changing this value read the documentation for this option
-  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "25.05"; # Did you read the comment?
-
-  # Define a user account. Don't forget to set a password with ‘passwd’.
+  # User configuration
   users.users.me = {
     isNormalUser = true;
     description = "Maxim";
-    extraGroups = [ "networkmanager" "wheel" ];
+    extraGroups = [
+      "networkmanager"
+      "wheel"
+      "docker" # For development
+    ];
   };
 
-  # for sublime <4200 to work
+  # Insecure packages (be specific about what you need)
   nixpkgs.config.permittedInsecurePackages = [
-    "openssl-1.1.1w"
+    "openssl-1.1.1w" # Required for Sublime Text < 4200
   ];
 
+  # Home Manager configuration
   home-manager = {
-    extraSpecialArgs = { inherit inputs; };
+    extraSpecialArgs = {inherit inputs;};
     useGlobalPkgs = true;
     useUserPackages = true;
     users = {
@@ -246,4 +100,6 @@
     };
   };
 
+  # System state version - DO NOT CHANGE
+  system.stateVersion = "25.05";
 }
