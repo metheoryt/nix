@@ -12,6 +12,7 @@
     windsurf
     fastfetch
     uv
+    libreoffice-qt6-fresh
   ];
   programs.git.enable = true;
   programs.git.userName = "Maxim Romanyuk";
