@@ -146,23 +146,38 @@
   users.groups.docker = {};
 
   # Development services (commented out by default - enable per project needs)
-  # services = {
-  #   # PostgreSQL for development
-  #   postgresql = {
-  #     enable = true;
-  #     package = pkgs.postgresql_15;
-  #     enableTCPIP = true;
-  #     authentication = pkgs.lib.mkOverride 10 ''
-  #       local all all trust
-  #       host all all 127.0.0.1/32 trust
-  #       host all all ::1/128 trust
-  #     '';
-  #   };
+  services = {
+    ollama = {
+      enable = true;
+      acceleration = "cuda"; # "false" for CPU, "rocm" for AMD
+      host = "127.0.0.1"; # change to "0.0.0.0" only if you know the risks
+    };
+    open-webui = {
+      enable = true;
+      port = 3000;
+      # Optional extra env; Open WebUI already detects local Ollama.
+      environment = {
+        DO_NOT_TRACK = "True";
+        ANONYMIZED_TELEMETRY = "False";
+      };
+    };
 
-  #   # Redis for development
-  #   redis.servers.development = {
-  #     enable = true;
-  #     port = 6379;
-  #   };
-  # };
+    #   # PostgreSQL for development
+    #   postgresql = {
+    #     enable = true;
+    #     package = pkgs.postgresql_15;
+    #     enableTCPIP = true;
+    #     authentication = pkgs.lib.mkOverride 10 ''
+    #       local all all trust
+    #       host all all 127.0.0.1/32 trust
+    #       host all all ::1/128 trust
+    #     '';
+    #   };
+
+    #   # Redis for development
+    #   redis.servers.development = {
+    #     enable = true;
+    #     port = 6379;
+    #   };
+  };
 }

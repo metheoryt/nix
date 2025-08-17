@@ -27,9 +27,6 @@
     # Remote access
     rustdesk
 
-    # AI/ML
-    ollama-cuda
-
     # Additional utilities
     dconf-editor
     gnome-tweaks
@@ -241,7 +238,7 @@
 
       # UI scaling and theme settings
       "org/gnome/desktop/interface" = {
-        text-scaling-factor = 1.15;
+        text-scaling-factor = 1;
         gtk-theme = "Adwaita";
         icon-theme = "Adwaita";
         cursor-theme = "Adwaita";
