@@ -14,7 +14,6 @@ default:
     @echo "Updates:"
     @echo "  just update    - Update all flake inputs"
     @echo "  just upgrade   - Update and rebuild system"
-    @echo "  just hm-switch - Switch Home Manager configuration"
     @echo ""
     @echo "Maintenance:"
     @echo "  just clean     - Clean old generations and garbage collect"
@@ -35,7 +34,6 @@ default:
 # Variables
 hostname := "g16"
 flake_dir := justfile_directory()
-
 # Build system configuration without switching
 build:
     @echo "🔨 Building NixOS configuration..."
@@ -63,7 +61,7 @@ boot:
 # Update flake inputs
 update:
     @echo "📦 Updating flake inputs..."
-    nix flake update {{flake_dir}}
+    nix flake update --flake {{flake_dir}}
     @echo "✅ Flake inputs updated!"
 
 # Update and rebuild system
@@ -72,13 +70,6 @@ upgrade:
     just update
     just switch
     @echo "🎉 System upgrade complete!"
-
-# Switch Home Manager configuration (via system rebuild)
-hm-switch:
-    @echo "🏠 Switching Home Manager configuration..."
-    @echo "Note: Home Manager is managed as NixOS module, rebuilding system..."
-    sudo nixos-rebuild switch --flake {{flake_dir}}#{{hostname}}
-    @echo "✅ Home Manager updated via system rebuild!"
 
 # Clean old generations and garbage collect
 clean:
