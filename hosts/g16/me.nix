@@ -8,6 +8,7 @@
     # Browsers
     brave
     firefox
+    google-chrome
 
     # Communication
     telegram-desktop
