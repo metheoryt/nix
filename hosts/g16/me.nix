@@ -6,7 +6,6 @@
   # Core packages
   home.packages = with pkgs; [
     # Browsers
-    brave
     firefox
     google-chrome
 
@@ -20,7 +19,6 @@
 
     # System utilities
     fastfetch
-    uv
 
     # Office suite
     libreoffice-qt6-fresh

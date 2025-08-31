@@ -65,9 +65,6 @@
     # AppImage support
     appimage-run
 
-    # Development tools specific to this machine
-    python312
-
     # System utilities
     os-prober
   ];

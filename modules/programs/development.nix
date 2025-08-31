@@ -69,9 +69,9 @@
     libxslt
 
     # Python development environment
-    python312
-    python312Packages.pip
-    python312Packages.virtualenv
+    python313
+    python313Packages.pip
+    python313Packages.virtualenv
     uv # Fast Python package manager
   ];
 
@@ -138,7 +138,7 @@
   environment.variables = {
     EDITOR = "vim";
     PAGER = "less";
-    BROWSER = "firefox";
+    BROWSER = "google-chrome-stable";
     TERMINAL = "gnome-terminal";
   };
 
