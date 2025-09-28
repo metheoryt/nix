@@ -30,3 +30,6 @@ Thumbs.db
 
 # Log files
 *.log
+
+# Flake inputs (managed externally)
+nixos-hardware/

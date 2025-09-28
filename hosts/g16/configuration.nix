@@ -16,6 +16,7 @@
 
     # Hardware-specific modules
     ../../modules/nvidia.nix
+    ../../modules/hardware/asus-rog.nix
 
     # Program modules
     ../../modules/programs/development.nix
@@ -84,6 +85,12 @@
   nixpkgs.config.permittedInsecurePackages = [
     "openssl-1.1.1w" # Required for Sublime Text < 4200
   ];
+
+  # ASUS ROG specific configuration
+  hardware.asus.battery = {
+    chargeUpto = 85; # Charge to 85% to preserve battery health
+    enableChargeUptoScript = true; # Enables charge-upto command
+  };
 
   # Home Manager configuration
   home-manager = {
