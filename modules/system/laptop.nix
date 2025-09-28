@@ -17,9 +17,9 @@
 
   # Laptop lid settings
   services.logind = {
-    lidSwitch = "suspend";
-    lidSwitchExternalPower = "lock";
-    powerKey = "suspend";
+    settings.Login.HandleLidSwitchExternalPower = "lock";
+    settings.Login.HandleLidSwitch = "suspend";
+    settings.Login.HandlePowerKey = "suspend";
   };
 
   # Battery optimization
