@@ -13,7 +13,7 @@
     telegram-desktop
 
     # Development tools
-    jetbrains.pycharm-professional
+    jetbrains.pycharm
     windsurf
     zed-editor
 

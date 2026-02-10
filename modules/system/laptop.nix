@@ -87,8 +87,8 @@
       enable = true;
       extraPackages = with pkgs; [
         intel-media-driver # For modern Intel GPUs
-        vaapiIntel # For older Intel GPUs
-        vaapiVdpau
+        intel-vaapi-driver # For older Intel GPUs
+        libva-vdpau-driver
         libvdpau-va-gl
       ];
     };
