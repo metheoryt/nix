@@ -187,12 +187,12 @@
   services = {
     ollama = {
       enable = true;
-      acceleration = "cuda"; # "false" for CPU, "rocm" for AMD
+      package = pkgs.ollama-cuda;
       host = "127.0.0.1"; # change to "0.0.0.0" only if you know the risks
     };
     open-webui = {
       enable = true;
-      port = 3000;
+      port = 3001;
       # Optional extra env; Open WebUI already detects local Ollama.
       environment = {
         DO_NOT_TRACK = "True";
