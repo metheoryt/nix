@@ -19,6 +19,12 @@
 
     # Flake utilities for better development experience
     flake-utils.url = "github:numtide/flake-utils";
+
+    # Claude Code — updated hourly (nixpkgs lags behind the rapid release cadence)
+    claude-code-nix = {
+      url = "github:sadjow/claude-code-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
@@ -44,6 +50,7 @@
     # Common overlays
     overlays = [
       stableOverlay
+      inputs.claude-code-nix.overlays.default
     ];
 
     # Common nixpkgs configuration
@@ -148,9 +155,9 @@
       python = nixpkgs.legacyPackages.${system}.mkShell {
         name = "python-dev";
         packages = with nixpkgs.legacyPackages.${system}; [
-          python312
-          python312Packages.pip
-          python312Packages.virtualenv
+          python313
+          python313Packages.pip
+          python313Packages.virtualenv
           uv # Fast Python package manager
           ruff # Fast Python linter
           black # Python formatter

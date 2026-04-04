@@ -32,7 +32,9 @@
     # Power management settings
     powerManagement = {
       enable = true;
-      finegrained = false; # Experimental feature, may cause issues
+      # Fine-grained power management: powers off GPU when not in use (good for RTX 40-series)
+      # Revert to false if you experience suspend/resume issues
+      finegrained = true;
     };
 
     # Use open source kernel modules (recommended for newer GPUs)
@@ -78,6 +80,12 @@
 
     # Disable nouveau (open source NVIDIA driver)
     "nouveau.modeset=0"
+
+    # Enable runtime D3 power state — GPU powers down when idle (pairs with finegrained=true)
+    "nvidia.NVreg_DynamicPowerManagement=0x02"
+
+    # PCIe Active State Power Management — reduces power on idle PCIe links
+    "pcie_aspm.policy=powersave"
   ];
 
   # Blacklist nouveau driver
@@ -175,14 +183,6 @@
 
   # Systemd services for better power management are handled by base NixOS NVIDIA module
   # when hardware.nvidia.powerManagement.enable = true; is set
-
-  # Udev rules for NVIDIA
-  services.udev.extraRules = ''
-    # NVIDIA device permissions
-    KERNEL=="nvidia", RUN+="${pkgs.runtimeShell} -c 'mknod -m 666 /dev/nvidiactl c 195 255'"
-    KERNEL=="nvidia_modeset", RUN+="${pkgs.runtimeShell} -c 'mknod -m 666 /dev/nvidia-modeset c 195 254'"
-    KERNEL=="nvidia_uvm", RUN+="${pkgs.runtimeShell} -c 'mknod -m 666 /dev/nvidia-uvm c 510 0'"
-  '';
 
   # Performance tuning
   boot.kernel.sysctl = {

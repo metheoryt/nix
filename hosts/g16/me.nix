@@ -14,11 +14,8 @@
 
     # Development tools
     jetbrains.pycharm
-    windsurf
     zed-editor
-
-    # Node.js for Claude Code and other tools
-    nodejs_22
+    claude-code
 
     # System utilities
     fastfetch
@@ -157,7 +154,7 @@
       set fish_greeting "Welcome to NixOS on G16!"
 
       # Set editor
-      set -x EDITOR vim
+      set -x EDITOR nvim
 
       # Add local bin to path
       fish_add_path ~/.local/bin
@@ -166,9 +163,6 @@
       if command -v direnv >/dev/null
           direnv hook fish | source
       end
-
-      # Set up npm global packages path
-      fish_add_path ~/.npm-global/bin
     '';
   };
 
@@ -189,9 +183,6 @@
       # Colored ls
       alias ls='ls --color=auto'
       alias grep='grep --color=auto'
-
-      # Add npm global bin to PATH
-      export PATH="$HOME/.npm-global/bin:$PATH"
 
       # Claude Code alias
       alias cc='claude'
@@ -248,11 +239,6 @@
   dconf = {
     enable = true;
     settings = {
-      # Enable fractional scaling
-      "org/gnome/mutter" = {
-        experimental-features = ["scale-monitor-framebuffer"];
-      };
-
       # UI scaling and theme settings
       "org/gnome/desktop/interface" = {
         text-scaling-factor = 1;

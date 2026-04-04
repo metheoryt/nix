@@ -53,7 +53,7 @@
 
       # Build settings
       max-jobs = "auto";
-      cores = 0; # Use all available cores
+      # cores omitted — defaults to all available cores
 
       # Keep failed builds for debugging
       keep-failed = false;
@@ -142,7 +142,7 @@
   # Bluetooth
   hardware.bluetooth = {
     enable = true;
-    powerOnBoot = true;
+    powerOnBoot = false; # Don't auto-enable Bluetooth on boot (saves battery; enable manually)
     settings = {
       General = {
         Enable = "Source,Sink,Media,Socket";

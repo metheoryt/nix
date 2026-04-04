@@ -45,20 +45,10 @@
 
   # ASUS ROG-specific services
   services.supergfxd.enable = true; # GPU mode switching
-  services.asusd = {
-    enable = true;
-  };
+  services.asusd.enable = true;
 
   # Flatpak support
   services.flatpak.enable = true;
-
-  # Gaming - Steam
-  programs.steam = {
-    enable = true;
-    remotePlay.openFirewall = true;
-    dedicatedServer.openFirewall = true;
-    localNetworkGameTransfers.openFirewall = true;
-  };
 
   # Host-specific packages
   environment.systemPackages = with pkgs; [
@@ -79,11 +69,6 @@
       "docker" # For development
     ];
   };
-
-  # Insecure packages (be specific about what you need)
-  nixpkgs.config.permittedInsecurePackages = [
-    "openssl-1.1.1w" # Required for Sublime Text < 4200
-  ];
 
   # ASUS ROG specific configuration
   hardware.asus.battery = {

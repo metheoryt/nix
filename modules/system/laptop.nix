@@ -9,11 +9,8 @@
   # Intel CPU thermal management
   services.thermald.enable = true;
 
-  # Better power management for Intel CPUs
-  powerManagement = {
-    enable = true;
-    cpuFreqGovernor = lib.mkDefault "powersave";
-  };
+  # Enable power management (cpufreq module; governor managed by power-profiles-daemon)
+  powerManagement.enable = true;
 
   # Laptop lid settings
   services.logind = {
@@ -30,21 +27,6 @@
     percentageAction = 3;
     criticalPowerAction = "Hibernate";
   };
-
-  # Auto-cpufreq for better battery life (alternative to power-profiles-daemon)
-  # services.auto-cpufreq = {
-  #   enable = false; # Enable if you disable power-profiles-daemon
-  #   settings = {
-  #     battery = {
-  #       governor = "powersave";
-  #       turbo = "never";
-  #     };
-  #     charger = {
-  #       governor = "performance";
-  #       turbo = "auto";
-  #     };
-  #   };
-  # };
 
   # Backlight control
   hardware.acpilight.enable = true;
@@ -78,6 +60,7 @@
   boot.kernelParams = [
     "intel_pstate=active" # Better Intel CPU power management
     "i915.fastboot=1" # Faster boot with Intel graphics
+    "mem_sleep_default=deep" # Use S3 (deep) sleep instead of s2idle — better battery on suspend
   ];
 
   # Hardware specific optimizations

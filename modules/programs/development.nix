@@ -151,18 +151,6 @@
     syntaxHighlighting.enable = true;
   };
 
-  # Git configuration
-  programs.git = {
-    enable = true;
-    config = {
-      init.defaultBranch = "main";
-      pull.rebase = true;
-      push.autoSetupRemote = true;
-      core.autocrlf = "input";
-      merge.conflictstyle = "diff3";
-    };
-  };
-
   # Development fonts
   fonts.packages = with pkgs; [
     nerd-fonts.fira-code
@@ -174,7 +162,7 @@
 
   # Environment variables for development
   environment.variables = {
-    EDITOR = "vim";
+    EDITOR = "nvim";
     PAGER = "less";
     BROWSER = "google-chrome-stable";
     TERMINAL = "gnome-terminal";
@@ -183,39 +171,4 @@
   # User groups for development
   users.groups.docker = {};
 
-  # Development services (commented out by default - enable per project needs)
-  services = {
-    ollama = {
-      enable = true;
-      package = pkgs.ollama-cuda;
-      host = "127.0.0.1"; # change to "0.0.0.0" only if you know the risks
-    };
-    open-webui = {
-      enable = true;
-      port = 3001;
-      # Optional extra env; Open WebUI already detects local Ollama.
-      environment = {
-        DO_NOT_TRACK = "True";
-        ANONYMIZED_TELEMETRY = "False";
-      };
-    };
-
-    #   # PostgreSQL for development
-    #   postgresql = {
-    #     enable = true;
-    #     package = pkgs.postgresql_15;
-    #     enableTCPIP = true;
-    #     authentication = pkgs.lib.mkOverride 10 ''
-    #       local all all trust
-    #       host all all 127.0.0.1/32 trust
-    #       host all all ::1/128 trust
-    #     '';
-    #   };
-
-    #   # Redis for development
-    #   redis.servers.development = {
-    #     enable = true;
-    #     port = 6379;
-    #   };
-  };
 }
