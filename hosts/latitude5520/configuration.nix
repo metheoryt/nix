@@ -70,6 +70,7 @@
   users.users.me = {
     isNormalUser = true;
     description = "Maxim";
+    shell = pkgs.fish;
     extraGroups = [
       "networkmanager"
       "wheel"

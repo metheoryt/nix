@@ -214,6 +214,8 @@
     home-manager
   ];
 
+  programs.fish.enable = true;
+
   # System state version
   system.stateVersion = lib.mkDefault "25.05";
 }
