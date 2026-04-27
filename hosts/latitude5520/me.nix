@@ -104,9 +104,9 @@
       gl = "git pull";
 
       # NixOS specific
-      nrs = "sudo nixos-rebuild switch --flake .#g16";
-      nrt = "sudo nixos-rebuild test --flake .#g16";
-      nrb = "sudo nixos-rebuild boot --flake .#g16";
+      nrs = "sudo nixos-rebuild switch --flake .#latitude5520";
+      nrt = "sudo nixos-rebuild test --flake .#latitude5520";
+      nrb = "sudo nixos-rebuild boot --flake .#latitude5520";
 
       # Claude Code (installed via npm)
       cc = "claude";
@@ -126,7 +126,7 @@
         body = ''
           set current_dir (pwd)
           cd ~/nix
-          sudo nixos-rebuild switch --flake .#g16
+          sudo nixos-rebuild switch --flake .#latitude5520
           cd $current_dir
         '';
       };
@@ -147,14 +147,14 @@
         description = "Cleanup NixOS system";
         body = ''
           sudo nix-collect-garbage -d
-          sudo nixos-rebuild switch --flake ~/nix#g16
+          sudo nixos-rebuild switch --flake ~/nix#latitude5520
         '';
       };
     };
 
     interactiveShellInit = ''
       # Set greeting
-      set fish_greeting "Welcome to NixOS on G16!"
+      set fish_greeting "Welcome to NixOS on Latitude 5520!"
 
       # Set editor
       set -x EDITOR nvim

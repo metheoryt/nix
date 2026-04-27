@@ -33,7 +33,7 @@ default:
     @echo "  just generations - Show system generations"
 
 # Variables
-hostname := "g16"
+hostname := `hostname`
 flake_dir := justfile_directory()
 # Build system configuration without switching
 build:

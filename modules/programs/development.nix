@@ -165,7 +165,7 @@
     EDITOR = "nvim";
     PAGER = "less";
     BROWSER = "google-chrome-stable";
-    TERMINAL = "gnome-terminal";
+    TERMINAL = "ghostty";
   };
 
   # User groups for development

@@ -73,7 +73,7 @@
   in {
     # NixOS Configurations
     nixosConfigurations = {
-      # Main laptop configuration
+      # ASUS ROG G16 laptop
       g16 = nixpkgs.lib.nixosSystem {
         inherit system;
         inherit specialArgs;
@@ -97,6 +97,30 @@
           })
         ];
       };
+
+      # Dell Latitude 5520 laptop
+      latitude5520 = nixpkgs.lib.nixosSystem {
+        inherit system;
+        inherit specialArgs;
+
+        modules = [
+          # Hardware configuration
+          ./hosts/latitude5520/configuration.nix
+          ./hosts/latitude5520/hardware-configuration.nix
+
+          # Hardware-specific optimizations from nixos-hardware
+          # (bundles common-cpu-intel + common-pc-laptop + common-pc-ssd + thermald + fwupd)
+          nixos-hardware.nixosModules.dell-latitude-5520
+
+          # Home Manager integration
+          home-manager.nixosModules.default
+
+          # System-wide nixpkgs configuration
+          ({...}: {
+            nixpkgs = nixpkgsConfig;
+          })
+        ];
+      };
     };
 
     # Home Manager Configurations (standalone)
@@ -106,6 +130,14 @@
         extraSpecialArgs = specialArgs;
         modules = [
           ./hosts/g16/me.nix
+        ];
+      };
+
+      "me@latitude5520" = home-manager.lib.homeManagerConfiguration {
+        pkgs = import nixpkgs nixpkgsConfig;
+        extraSpecialArgs = specialArgs;
+        modules = [
+          ./hosts/latitude5520/me.nix
         ];
       };
     };
@@ -222,6 +254,8 @@
       # Check that configurations build successfully
       nixos-config = self.nixosConfigurations.g16.config.system.build.toplevel;
       home-manager-config = self.homeConfigurations."me@g16".activationPackage;
+      nixos-config-latitude5520 = self.nixosConfigurations.latitude5520.config.system.build.toplevel;
+      home-manager-config-latitude5520 = self.homeConfigurations."me@latitude5520".activationPackage;
     };
 
     # Templates for creating new configurations (TODO: implement)
