@@ -74,6 +74,7 @@
     docker-compose
 
     # Language servers and formatters
+    nil
     nixd
     alejandra
 

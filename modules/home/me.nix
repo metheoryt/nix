@@ -5,7 +5,6 @@
 
   home.packages = with pkgs; [
     # Browsers
-    firefox
     google-chrome
 
     # Communication
@@ -63,7 +62,6 @@
     };
   };
 
-  programs.firefox.enable = true;
 
   programs.fish = {
     enable = true;
