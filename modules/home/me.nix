@@ -17,8 +17,16 @@
     # Office suite
     libreoffice-qt6-fresh
 
-    # Remote access
-    rustdesk
+    # Remote access — wrapper sets WAYLAND_DISPLAY= to fix keyboard input under Wayland
+    (pkgs.symlinkJoin {
+      name = "rustdesk-wrapped";
+      paths = [ pkgs.rustdesk ];
+      nativeBuildInputs = [ pkgs.makeWrapper ];
+      postBuild = ''
+        wrapProgram $out/bin/rustdesk \
+          --set WAYLAND_DISPLAY ""
+      '';
+    })
 
     # VPN
     (pkgs.symlinkJoin {
@@ -292,6 +300,14 @@
   };
 
   xdg.enable = true;
+
+  xdg.desktopEntries.rustdesk = {
+    name = "RustDesk";
+    exec = "env WAYLAND_DISPLAY= ${pkgs.rustdesk}/bin/rustdesk %U";
+    icon = "rustdesk";
+    terminal = false;
+    categories = [ "Network" "RemoteAccess" ];
+  };
 
   xdg.userDirs = {
     enable = true;
