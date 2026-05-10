@@ -17,6 +17,10 @@
     # Office suite
     libreoffice-qt6-fresh
 
+    # Remote access
+    remmina
+    moonlight-qt
+
     # Remote access — wrapper sets WAYLAND_DISPLAY= to fix keyboard input under Wayland
     (pkgs.symlinkJoin {
       name = "rustdesk-wrapped";
