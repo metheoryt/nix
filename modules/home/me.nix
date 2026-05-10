@@ -1,4 +1,4 @@
-{ pkgs, hostname, ... }: {
+{ pkgs, config, hostname, ... }: {
   home.username = "me";
   home.homeDirectory = "/home/me";
   home.stateVersion = "25.05";
@@ -12,7 +12,6 @@
 
     # Development tools
     jetbrains.pycharm
-    zed-editor
     claude-code
 
     # Office suite
@@ -20,6 +19,17 @@
 
     # Remote access
     rustdesk
+
+    # VPN
+    (pkgs.symlinkJoin {
+      name = "amnezia-vpn-wrapped";
+      paths = [ pkgs.amnezia-vpn ];
+      nativeBuildInputs = [ pkgs.makeWrapper ];
+      postBuild = ''
+        wrapProgram $out/bin/AmneziaVPN \
+          --prefix XDG_DATA_DIRS : "${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}"
+      '';
+    })
 
     # Additional utilities
     dconf-editor
@@ -282,5 +292,60 @@
   };
 
   xdg.enable = true;
+
+  xdg.userDirs = {
+    enable = true;
+    createDirectories = true;
+    setSessionVariables = true;
+    desktop = "${config.home.homeDirectory}/Desktop";
+    download = "${config.home.homeDirectory}/Downloads";
+    templates = "${config.home.homeDirectory}/Templates";
+    publicShare = "${config.home.homeDirectory}/Public";
+    documents = "${config.home.homeDirectory}/Documents";
+    music = "${config.home.homeDirectory}/Music";
+    pictures = "${config.home.homeDirectory}/Pictures";
+    videos = "${config.home.homeDirectory}/Videos";
+  };
+
+  xdg.mimeApps = {
+    enable = true;
+    defaultApplications = {
+      "text/html" = "google-chrome.desktop";
+      "x-scheme-handler/http" = "google-chrome.desktop";
+      "x-scheme-handler/https" = "google-chrome.desktop";
+      "x-scheme-handler/about" = "google-chrome.desktop";
+      "x-scheme-handler/unknown" = "google-chrome.desktop";
+      "x-scheme-handler/tg" = "org.telegram.desktop.desktop";
+      "x-scheme-handler/tonsite" = "org.telegram.desktop.desktop";
+    };
+    associations.added = {
+      "x-scheme-handler/tg" = "org.telegram.desktop.desktop";
+      "x-scheme-handler/tonsite" = "org.telegram.desktop.desktop";
+    };
+  };
+
+  programs.zed-editor = {
+    enable = true;
+    userSettings = {
+      agent = {
+        default_model = {
+          provider = "anthropic";
+          model = "claude-sonnet-4-6-latest";
+          enable_thinking = false;
+        };
+        favorite_models = [];
+        model_parameters = [];
+      };
+      agent_servers."claude-acp".type = "registry";
+      ui_font_size = 16;
+      buffer_font_size = 15;
+      theme = {
+        mode = "system";
+        light = "One Light";
+        dark = "One Dark";
+      };
+    };
+  };
+
   programs.home-manager.enable = true;
 }

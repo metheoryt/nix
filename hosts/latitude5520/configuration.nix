@@ -60,6 +60,10 @@
   # Flatpak support
   services.flatpak.enable = true;
 
+  # AmneziaVPN background service (required for VPN connections)
+  systemd.packages = [ pkgs.amnezia-vpn ];
+  systemd.services.AmneziaVPN.wantedBy = [ "multi-user.target" ];
+
   # Host-specific packages
   environment.systemPackages = with pkgs; [
     # System utilities
