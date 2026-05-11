@@ -1,4 +1,10 @@
-{ pkgs, config, hostname, ... }: {
+{
+  pkgs,
+  config,
+  hostname,
+  ...
+}:
+{
   home.username = "me";
   home.homeDirectory = "/home/me";
   home.stateVersion = "25.05";
@@ -84,7 +90,6 @@
     };
   };
 
-
   programs.fish = {
     enable = true;
 
@@ -110,6 +115,7 @@
       nrb = "sudo nixos-rebuild boot --flake .#${hostname}";
 
       cc = "claude";
+      ccw = "CLAUDE_CONFIG_DIR=~/.claude-work claude";
 
       df = "df -h";
       du = "du -h";
@@ -268,12 +274,12 @@
         resize-with-right-button = true;
       };
       "org/gnome/desktop/wm/keybindings" = {
-        close = ["<Alt>F4"];
-        toggle-fullscreen = ["F11"];
-        switch-to-workspace-left = ["<Control><Alt>Left"];
-        switch-to-workspace-right = ["<Control><Alt>Right"];
-        move-to-workspace-left = ["<Control><Alt><Shift>Left"];
-        move-to-workspace-right = ["<Control><Alt><Shift>Right"];
+        close = [ "<Alt>F4" ];
+        toggle-fullscreen = [ "F11" ];
+        switch-to-workspace-left = [ "<Control><Alt>Left" ];
+        switch-to-workspace-right = [ "<Control><Alt>Right" ];
+        move-to-workspace-left = [ "<Control><Alt><Shift>Left" ];
+        move-to-workspace-right = [ "<Control><Alt><Shift>Right" ];
       };
       "org/gnome/settings-daemon/plugins/media-keys" = {
         custom-keybindings = [
@@ -310,7 +316,10 @@
     exec = "env WAYLAND_DISPLAY= ${pkgs.rustdesk}/bin/rustdesk %U";
     icon = "rustdesk";
     terminal = false;
-    categories = [ "Network" "RemoteAccess" ];
+    categories = [
+      "Network"
+      "RemoteAccess"
+    ];
   };
 
   xdg.userDirs = {
@@ -353,8 +362,8 @@
           model = "claude-sonnet-4-6-latest";
           enable_thinking = false;
         };
-        favorite_models = [];
-        model_parameters = [];
+        favorite_models = [ ];
+        model_parameters = [ ];
       };
       agent_servers."claude-acp".type = "registry";
       ui_font_size = 16;
