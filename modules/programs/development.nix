@@ -1,4 +1,5 @@
-{pkgs, ...}: {
+{ pkgs, ... }:
+{
   # Enable nix-ld for compatibility with dynamically linked executables
   programs.nix-ld = {
     enable = true;
@@ -33,6 +34,22 @@
       libxext
       libxrender
       libxtst
+
+      #
+      # PURE
+      #
+      # kan-kan repo
+      # Geospatial stack (Django GIS via ctypes: GDAL/GEOS/PROJ)
+      gdal
+      geos
+      proj
+      # Media / text processing
+      libmediainfo
+      file # libmagic (python-magic)
+      glib # libgthread / libglib (opencv-python)
+      #
+      #
+      #
     ];
   };
 
@@ -170,6 +187,6 @@
   };
 
   # User groups for development
-  users.groups.docker = {};
+  users.groups.docker = { };
 
 }

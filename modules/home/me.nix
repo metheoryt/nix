@@ -77,6 +77,10 @@
       push.autoSetupRemote = true;
       core.autocrlf = "input";
       merge.conflictstyle = "diff3";
+      # HTTPS auth to github.com via the gh CLI's stored token
+      # (requires the token to be SAML-SSO authorized for any private orgs).
+      credential."https://github.com".helper = "!gh auth git-credential";
+      credential."https://gist.github.com".helper = "!gh auth git-credential";
       alias = {
         st = "status";
         co = "checkout";
