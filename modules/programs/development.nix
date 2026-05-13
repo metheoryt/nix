@@ -35,8 +35,7 @@
       libxrender
       libxtst
 
-      #
-      # PURE
+      ### PURE
       #
       # kan-kan repo
       # Geospatial stack (Django GIS via ctypes: GDAL/GEOS/PROJ)
@@ -47,9 +46,7 @@
       libmediainfo
       file # libmagic (python-magic)
       glib # libgthread / libglib (opencv-python)
-      #
-      #
-      #
+      libxcb
     ];
   };
 
