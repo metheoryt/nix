@@ -17,12 +17,6 @@
       url = "github:sadjow/claude-code-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    # Zed — tracks releases directly (nixpkgs lags); binaries served from zed.cachix.org
-    zed-editor = {
-      url = "github:zed-industries/zed";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs = {
