@@ -2,6 +2,7 @@
   pkgs,
   config,
   hostname,
+  inputs,
   ...
 }:
 {
@@ -28,9 +29,10 @@
     moonlight-qt
 
     # Remote access — wrapper sets WAYLAND_DISPLAY= to fix keyboard input under Wayland
+    # rustdesk-flutter is the newer Flutter-based build (free/AGPL, binary-cached)
     (pkgs.symlinkJoin {
       name = "rustdesk-wrapped";
-      paths = [ pkgs.rustdesk ];
+      paths = [ pkgs.rustdesk-flutter ];
       nativeBuildInputs = [ pkgs.makeWrapper ];
       postBuild = ''
         wrapProgram $out/bin/rustdesk \
@@ -317,7 +319,7 @@
 
   xdg.desktopEntries.rustdesk = {
     name = "RustDesk";
-    exec = "env WAYLAND_DISPLAY= ${pkgs.rustdesk}/bin/rustdesk %U";
+    exec = "env WAYLAND_DISPLAY= ${pkgs.rustdesk-flutter}/bin/rustdesk %U";
     icon = "rustdesk";
     terminal = false;
     categories = [
@@ -359,6 +361,7 @@
 
   programs.zed-editor = {
     enable = true;
+    package = inputs.zed-editor.packages.${pkgs.system}.default;
     userSettings = {
       agent = {
         default_model = {
