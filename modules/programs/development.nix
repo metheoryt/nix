@@ -129,6 +129,7 @@
 
     # PURE org programs
     slack
+    zoom-us
   ];
 
   # Docker support
