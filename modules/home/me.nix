@@ -20,6 +20,7 @@
     jetbrains.pycharm
     claude-code
     sox # for claude /voice audio recording
+    difftastic # structural diff tool — `difft`, also wired as `git dft`
 
     # Office suite
     libreoffice-qt6-fresh
@@ -92,8 +93,23 @@
     ghostty
   ];
 
+  # delta: syntax-highlighting pager for git diff/show/log/blame.
+  # enableGitIntegration wires it up as core.pager + interactive.diffFilter.
+  programs.delta = {
+    enable = true;
+    enableGitIntegration = true;
+    options = {
+      navigate = true; # n/N to jump between files/hunks
+      line-numbers = true;
+      side-by-side = true;
+      # follow ghostty's dark:Dracula / light:GitHub theme split
+      syntax-theme = "Dracula";
+    };
+  };
+
   programs.git = {
     enable = true;
+
     settings = {
       user = {
         name = "Maxim Romanyuk";
@@ -104,6 +120,10 @@
       push.autoSetupRemote = true;
       core.autocrlf = "input";
       merge.conflictstyle = "diff3";
+      # difftastic: structural (AST-aware) diffs, on demand via `git dft`.
+      diff.tool = "difftastic";
+      difftool.prompt = false;
+      difftool.difftastic.cmd = "${pkgs.difftastic}/bin/difft \"$LOCAL\" \"$REMOTE\"";
       # HTTPS auth to github.com via the gh CLI's stored token
       # (requires the token to be SAML-SSO authorized for any private orgs).
       credential."https://github.com".helper = "!gh auth git-credential";
@@ -116,6 +136,7 @@
         ci = "commit";
         unstage = "reset HEAD --";
         last = "log -1 HEAD";
+        dft = "difftool";
         graph = "log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit";
       };
     };
