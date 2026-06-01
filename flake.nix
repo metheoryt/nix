@@ -6,11 +6,16 @@
     nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.05";
 
     home-manager = {
-      url = "github:nix-community/home-manager";
+      # Pin to the release branch matching nixpkgs (nixos-unstable is currently 26.05).
+      # Using master skews ahead (26.11) and trips the version-mismatch warning.
+      url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
+    nixos-hardware = {
+      url = "github:NixOS/nixos-hardware/master";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     # Claude Code — updated hourly (nixpkgs lags behind the rapid release cadence)
     claude-code-nix = {
