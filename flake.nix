@@ -6,9 +6,9 @@
     nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.05";
 
     home-manager = {
-      # Pin to the release branch matching nixpkgs (nixos-unstable is currently 26.05).
-      # Using master skews ahead (26.11) and trips the version-mismatch warning.
-      url = "github:nix-community/home-manager/release-26.05";
+      # Track master to match nixos-unstable's version string (currently 26.11).
+      # release-26.05 lags behind unstable and trips the version-mismatch warning.
+      url = "github:nix-community/home-manager/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 

@@ -296,8 +296,9 @@
       font-family = "JetBrainsMono Nerd Font";
       font-size = 10;
       shell-integration = "fish";
-      theme = "dark:Dracula,light:GitHub Light Default";
+      theme = "Desert";
       quit-after-last-window-closed = true;
+      desktop-notifications = false;
       gtk-titlebar = false;
       keybind = [
         "ctrl+w=close_tab"
