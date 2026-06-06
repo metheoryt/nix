@@ -42,6 +42,8 @@
     })
 
     # VPN
+    protonvpn-gui # free tier for occasional geo-unblocking
+
     (pkgs.symlinkJoin {
       name = "amnezia-vpn-wrapped";
       paths = [ pkgs.amnezia-vpn ];
