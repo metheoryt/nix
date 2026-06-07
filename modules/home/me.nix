@@ -8,6 +8,8 @@ let
   # Upstream 1.4.7 Flutter build, repackaged from the official .deb because
   # nixpkgs lags (rustdesk-flutter 1.4.5). Already wraps in WAYLAND_DISPLAY="".
   rustdesk = pkgs.callPackage ./rustdesk-bin.nix { };
+  # Upstream Zed, repackaged from the official tarball (nixpkgs lags at 1.3.6).
+  zed-bin = pkgs.callPackage ./zed-bin.nix { };
 in
 {
   home.username = "me";
@@ -406,7 +408,12 @@ in
 
   programs.zed-editor = {
     enable = true;
+    # Upstream prebuilt — see ./zed-bin.nix. nixpkgs zed-editor lags.
+    package = zed-bin;
     userSettings = {
+      # Auto-update is compiled into the upstream binary; the Nix store is
+      # read-only and we manage versions via `just update-zed`, so disable it.
+      auto_update = false;
       agent = {
         default_model = {
           provider = "anthropic";
