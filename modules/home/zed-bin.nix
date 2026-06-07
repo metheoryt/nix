@@ -19,11 +19,13 @@
   stdenv,
   fetchurl,
   autoPatchelfHook,
+  makeWrapper,
   alsa-lib,
   zlib,
   libGL,
   vulkan-loader,
   wayland,
+  xkeyboard-config,
 }:
 stdenv.mkDerivation (finalAttrs: {
   pname = "zed-bin";
@@ -36,6 +38,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   nativeBuildInputs = [
     autoPatchelfHook
+    makeWrapper
     stdenv.cc.cc.lib # libstdc++ / libgcc_s for the bundled libs
   ];
 
@@ -61,8 +64,14 @@ stdenv.mkDerivation (finalAttrs: {
     cp -r ./* $out/
 
     # Match nixpkgs: real CLI is `zeditor`, keep `zed` as an alias (the desktop
-    # file and muscle memory both use `zed`).
-    mv $out/bin/zed $out/bin/zeditor
+    # file and muscle memory both use `zed`). Wrap it to point libxkbcommon at
+    # nixpkgs' xkeyboard-config: the bundled libxkbcommon.so.0 has the upstream
+    # default `/usr/share/X11/xkb` baked in, which is absent on NixOS, so keymap
+    # init segfaults the editor on launch. The CLI spawns libexec/zed-editor,
+    # which inherits this env. (Mirrors how nixpkgs' zed-editor is wrapped.)
+    mv $out/bin/zed $out/bin/.zeditor-unwrapped
+    makeWrapper $out/bin/.zeditor-unwrapped $out/bin/zeditor \
+      --set-default XKB_CONFIG_ROOT ${xkeyboard-config}/share/X11/xkb
     ln -s zeditor $out/bin/zed
 
     runHook postInstall
@@ -72,8 +81,8 @@ stdenv.mkDerivation (finalAttrs: {
     description = "High-performance, multiplayer code editor (upstream prebuilt binary)";
     homepage = "https://zed.dev";
     license = lib.licenses.gpl3Only;
-    platforms = [ "x86_64-linux" ];
+    platforms = ["x86_64-linux"];
     mainProgram = "zeditor";
-    sourceProvenance = [ lib.sourceTypes.binaryNativeCode ];
+    sourceProvenance = [lib.sourceTypes.binaryNativeCode];
   };
 })
