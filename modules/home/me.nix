@@ -40,7 +40,7 @@ in
     rustdesk
 
     # VPN
-    protonvpn-gui # free tier for occasional geo-unblocking
+    proton-vpn # free tier for occasional geo-unblocking
 
     (pkgs.symlinkJoin {
       name = "amnezia-vpn-wrapped";
