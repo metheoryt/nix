@@ -4,6 +4,11 @@
   hostname,
   ...
 }:
+let
+  # Upstream 1.4.7 Flutter build, repackaged from the official .deb because
+  # nixpkgs lags (rustdesk-flutter 1.4.5). Already wraps in WAYLAND_DISPLAY="".
+  rustdesk = pkgs.callPackage ./rustdesk-bin.nix { };
+in
 {
   home.username = "me";
   home.homeDirectory = "/home/me";
@@ -29,17 +34,8 @@
     remmina
     moonlight-qt
 
-    # Remote access — wrapper sets WAYLAND_DISPLAY= to fix keyboard input under Wayland
-    # rustdesk-flutter is the newer Flutter-based build (free/AGPL, binary-cached)
-    (pkgs.symlinkJoin {
-      name = "rustdesk-wrapped";
-      paths = [ pkgs.rustdesk-flutter ];
-      nativeBuildInputs = [ pkgs.makeWrapper ];
-      postBuild = ''
-        wrapProgram $out/bin/rustdesk \
-          --set WAYLAND_DISPLAY ""
-      '';
-    })
+    # Remote access — see ./rustdesk-bin.nix (upstream 1.4.7, WAYLAND_DISPLAY="" baked in)
+    rustdesk
 
     # VPN
     protonvpn-gui # free tier for occasional geo-unblocking
@@ -368,7 +364,7 @@
 
   xdg.desktopEntries.rustdesk = {
     name = "RustDesk";
-    exec = "env WAYLAND_DISPLAY= ${pkgs.rustdesk-flutter}/bin/rustdesk %U";
+    exec = "${rustdesk}/bin/rustdesk %U";
     icon = "rustdesk";
     terminal = false;
     categories = [

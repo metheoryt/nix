@@ -1,0 +1,131 @@
+# RustDesk repackaged from the upstream Flutter .deb.
+#
+# nixpkgs only ships rustdesk-flutter 1.4.5 (and the Sciter rustdesk 1.4.6),
+# both lagging upstream. This unpacks the official 1.4.7 amd64 .deb and
+# patchelfs it against nixpkgs libraries so we get the exact upstream binary
+# without a long Rust/Flutter source build.
+#
+# To bump: run `just update-rustdesk` (also triggered by `just update` /
+# `just upgrade`), which rewrites `version` + `hash` below from the latest
+# upstream release. Manual path: edit `version`, then `nix store prefetch-file
+# <url>` and paste the resulting sha256-… into `hash`.
+{
+  lib,
+  stdenv,
+  fetchurl,
+  dpkg,
+  autoPatchelfHook,
+  makeWrapper,
+  wrapGAppsHook3,
+  # runtime libs
+  gtk3,
+  glib,
+  pango,
+  cairo,
+  gdk-pixbuf,
+  atk,
+  libxkbcommon,
+  alsa-lib,
+  libpulseaudio,
+  pipewire,
+  gst_all_1,
+  libva,
+  libvdpau,
+  libvpx,
+  libyuv,
+  libaom,
+  libopus,
+  openssl,
+  pam,
+  libayatana-appindicator,
+  xdotool,
+  zlib,
+  libGL,
+  libxcb,
+  libxrandr,
+  libx11,
+  libxi,
+  libxfixes,
+  libxtst,
+}:
+stdenv.mkDerivation (finalAttrs: {
+  pname = "rustdesk-bin";
+  version = "1.4.7";
+
+  src = fetchurl {
+    url = "https://github.com/rustdesk/rustdesk/releases/download/${finalAttrs.version}/rustdesk-${finalAttrs.version}-x86_64.deb";
+    hash = "sha256-EvYbtc6xCnCAiZAzV70fmNy2GL0OpW7FaKrxcTo4Bwo=";
+  };
+
+  nativeBuildInputs = [
+    dpkg
+    autoPatchelfHook
+    makeWrapper
+    wrapGAppsHook3
+  ];
+
+  buildInputs = [
+    gtk3
+    glib
+    pango
+    cairo
+    gdk-pixbuf
+    atk
+    libxkbcommon
+    alsa-lib
+    libpulseaudio
+    pipewire
+    gst_all_1.gstreamer
+    gst_all_1.gst-plugins-base
+    libva
+    libvdpau
+    libvpx
+    libyuv
+    libaom
+    libopus
+    openssl
+    pam
+    libayatana-appindicator
+    xdotool
+    zlib
+    libGL
+    stdenv.cc.cc.lib
+    libx11
+    libxi
+    libxfixes
+    libxtst
+    libxrandr
+    libxcb
+  ];
+
+  # GApps wrapper handles the env; don't double-wrap.
+  dontWrapGApps = true;
+
+  # The .deb ships the real ELF at usr/share/rustdesk/rustdesk and relies on a
+  # postinst symlink for /usr/bin/rustdesk (which isn't in the data archive).
+  installPhase = ''
+    runHook preInstall
+
+    mkdir -p $out
+    cp -r usr/* $out/
+
+    runHook postInstall
+  '';
+
+  # Point bin/rustdesk at the real binary, force a blank WAYLAND_DISPLAY so
+  # keyboard input works under Wayland, and apply the GApps environment fixes.
+  postFixup = ''
+    makeWrapper $out/share/rustdesk/rustdesk $out/bin/rustdesk \
+      --set WAYLAND_DISPLAY "" \
+      "''${gappsWrapperArgs[@]}"
+  '';
+
+  meta = {
+    description = "Open source virtual / remote desktop infrastructure (upstream Flutter build)";
+    homepage = "https://rustdesk.com";
+    license = lib.licenses.agpl3Plus;
+    platforms = [ "x86_64-linux" ];
+    mainProgram = "rustdesk";
+    sourceProvenance = [ lib.sourceTypes.binaryNativeCode ];
+  };
+})

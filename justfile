@@ -59,11 +59,17 @@ boot:
     sudo nixos-rebuild boot --flake {{flake_dir}}#{{hostname}}
     @echo "✅ Configuration set for next boot!"
 
-# Update flake inputs
+# Update flake inputs (and out-of-tree pinned packages like rustdesk)
 update:
     @echo "📦 Updating flake inputs..."
     nix flake update --flake {{flake_dir}}
+    @just update-rustdesk
     @echo "✅ Flake inputs updated!"
+
+# Bump rustdesk-bin.nix to the latest upstream release (also run by `update`)
+update-rustdesk:
+    @echo "📦 Checking for new RustDesk release..."
+    {{flake_dir}}/update-rustdesk.sh
 
 # Update and set for next boot (safe for Nvidia drivers)
 upgrade:
