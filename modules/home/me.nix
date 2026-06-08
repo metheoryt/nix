@@ -10,6 +10,8 @@ let
   rustdesk = pkgs.callPackage ./rustdesk-bin.nix { };
   # Upstream Zed, repackaged from the official tarball (nixpkgs lags at 1.3.6).
   zed-bin = pkgs.callPackage ./zed-bin.nix { };
+  # nixpkgs jetbrains.pycharm bumped to latest upstream (it's the same tarball).
+  pycharm = pkgs.callPackage ./pycharm-bin.nix { };
 in
 {
   home.username = "me";
@@ -24,7 +26,7 @@ in
     telegram-desktop
 
     # Development tools
-    jetbrains.pycharm
+    pycharm # upstream-latest override — see ./pycharm-bin.nix (nixpkgs lags)
     claude-code
     sox # for claude /voice audio recording
     difftastic # structural diff tool — `difft`, also wired as `git dft`

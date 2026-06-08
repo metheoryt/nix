@@ -59,12 +59,13 @@ boot:
     sudo nixos-rebuild boot --flake {{flake_dir}}#{{hostname}}
     @echo "✅ Configuration set for next boot!"
 
-# Update flake inputs (and out-of-tree pinned packages like rustdesk, zed)
+# Update flake inputs (and out-of-tree pinned packages like rustdesk, zed, pycharm)
 update:
     @echo "📦 Updating flake inputs..."
     nix flake update --flake {{flake_dir}}
     @just update-rustdesk
     @just update-zed
+    @just update-pycharm
     @echo "✅ Flake inputs updated!"
 
 # Bump rustdesk-bin.nix to the latest upstream release (also run by `update`)
@@ -76,6 +77,11 @@ update-rustdesk:
 update-zed:
     @echo "📦 Checking for new Zed release..."
     {{flake_dir}}/update-zed.sh
+
+# Bump pycharm-bin.nix to the latest upstream release (also run by `update`)
+update-pycharm:
+    @echo "📦 Checking for new PyCharm release..."
+    {{flake_dir}}/update-pycharm.sh
 
 # Update and set for next boot (safe for Nvidia drivers)
 upgrade:
