@@ -305,6 +305,10 @@ in
       gtk-titlebar = false;
       keybind = [
         "ctrl+w=close_tab"
+        "alt+shift+left=goto_split:left"
+        "alt+shift+right=goto_split:right"
+        "alt+shift+up=goto_split:up"
+        "alt+shift+down=goto_split:down"
       ];
     };
   };
