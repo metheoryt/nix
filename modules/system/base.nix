@@ -90,6 +90,15 @@
     };
   };
 
+  # Disable Intel WiFi (iwlwifi/iwlmvm) power management. NetworkManager's
+  # wifi.powersave only controls 802.11 PS-Poll; the driver still defaults to
+  # power_scheme=2 (balanced), which causes periodic latency spikes that show
+  # up as stutter/freezes in latency-sensitive traffic (e.g. RustDesk, VoIP).
+  boot.extraModprobeConfig = ''
+    options iwlwifi power_save=0 d0i3_disable=1 uapsd_disable=1
+    options iwlmvm power_scheme=1
+  '';
+
   # systemd-resolved: required by openvpn3's netcfg service for VPN DNS
   # (NetworkManager integrates with it automatically).
   services.resolved.enable = true;

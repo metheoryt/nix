@@ -112,10 +112,16 @@ stdenv.mkDerivation (finalAttrs: {
     runHook postInstall
   '';
 
-  # Point bin/rustdesk at the real binary, force a blank WAYLAND_DISPLAY so
-  # keyboard input works under Wayland, and apply the GApps environment fixes.
+  # Point bin/rustdesk at the real binary and pin it to X11/XWayland so keyboard
+  # input works. RustDesk is a Flutter (GTK) app, and keyboard forwarding breaks
+  # on native Wayland. GDK_BACKEND=x11 is the authoritative lever for GTK;
+  # blanking WAYLAND_DISPLAY alone is not enough once the session exports
+  # XDG_SESSION_TYPE=wayland / QT_QPA_PLATFORM=wayland (see modules/desktop/gnome.nix).
+  # QT_QPA_PLATFORM=xcb covers any Qt subcomponents. Then apply the GApps env fixes.
   postFixup = ''
     makeWrapper $out/share/rustdesk/rustdesk $out/bin/rustdesk \
+      --set GDK_BACKEND x11 \
+      --set QT_QPA_PLATFORM xcb \
       --set WAYLAND_DISPLAY "" \
       "''${gappsWrapperArgs[@]}"
   '';

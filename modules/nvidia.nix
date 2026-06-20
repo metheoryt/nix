@@ -122,27 +122,6 @@
     __GL_VRR_ALLOWED = "0";
   };
 
-  # Session variables for Wayland compatibility
-  environment.sessionVariables = {
-    # Enable Wayland for Electron apps
-    NIXOS_OZONE_WL = "1";
-
-    # Firefox Wayland
-    MOZ_ENABLE_WAYLAND = "1";
-
-    # Qt Wayland
-    QT_QPA_PLATFORM = "wayland;xcb";
-
-    # SDL Wayland
-    SDL_VIDEODRIVER = "wayland";
-
-    # Clutter backend
-    CLUTTER_BACKEND = "wayland";
-
-    # XDG session
-    XDG_SESSION_TYPE = "wayland";
-  };
-
   # System packages for NVIDIA support
   environment.systemPackages = with pkgs; [
     # NVIDIA tools

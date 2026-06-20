@@ -76,6 +76,24 @@
     };
   };
 
+  # Session variables for Wayland compatibility.
+  # Makes Electron/Chromium and Firefox run natively on Wayland instead of
+  # XWayland — gives them smooth high-resolution touchpad scrolling (XWayland
+  # converts touchpad deltas into chunky, fast wheel steps).
+  #
+  # Scoped to just the two vars needed for that goal. Broader Wayland-forcing
+  # vars (QT_QPA_PLATFORM, SDL_VIDEODRIVER, CLUTTER_BACKEND, XDG_SESSION_TYPE)
+  # were deliberately dropped: they pushed GTK/Qt apps like RustDesk onto native
+  # Wayland, which breaks keyboard input. RustDesk pins itself to X11 in its own
+  # wrapper (modules/home/rustdesk-bin.nix), but keep this list minimal.
+  environment.sessionVariables = {
+    # Enable Wayland for Electron apps
+    NIXOS_OZONE_WL = "1";
+
+    # Firefox Wayland
+    MOZ_ENABLE_WAYLAND = "1";
+  };
+
   # Remove unwanted GNOME applications
   environment.gnome.excludePackages = with pkgs; [
     epiphany # GNOME web browser
