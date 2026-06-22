@@ -50,11 +50,11 @@
 }:
 stdenv.mkDerivation (finalAttrs: {
   pname = "rustdesk-bin";
-  version = "1.4.7";
+  version = "1.4.8";
 
   src = fetchurl {
     url = "https://github.com/rustdesk/rustdesk/releases/download/${finalAttrs.version}/rustdesk-${finalAttrs.version}-x86_64.deb";
-    hash = "sha256-EvYbtc6xCnCAiZAzV70fmNy2GL0OpW7FaKrxcTo4Bwo=";
+    hash = "sha256-xCbwpQzhQb47q/ZT7pIPQ8MM9RWd631GsKWO4H1fVH4=";
   };
 
   nativeBuildInputs = [
