@@ -12,10 +12,10 @@
 # API. Manual: edit `version`, then `nix store prefetch-file <url>`.
 { pkgs }:
 pkgs.jetbrains.pycharm.overrideAttrs (old: rec {
-  version = "2026.1.2";
+  version = "2026.1.3";
 
   src = pkgs.fetchurl {
     url = "https://download.jetbrains.com/python/pycharm-${version}.tar.gz";
-    hash = "sha256-kcd1vhb7CFn5sY69RW2I4THK3zN7DOn52O0YeIZWGWY=";
+    hash = "sha256-8+3j3gLTyXt8Fmpm37WTieXJp9KY/Q/wFol0XTCOKAc=";
   };
 })
