@@ -439,8 +439,21 @@ fi
 # Balance is intentionally absent: Claude Code's status-line stdin carries no
 # credit balance, and there's no synchronous account-balance API to call here.
 # Set $CLAUDE_API_BALANCE to surface a number you maintain elsewhere.
+# Token-billed (API / prepaid) session? Show cost/balance only then. Two guards:
+#  • Claude Code sends rate-limit WINDOWS only in subscription sessions, where
+#    per-token cost is meaningless — their presence hides the segment (the
+#    authoritative PER-SESSION signal; needed because individual accounts report
+#    organizationType=None, so the account-type check alone always shows it). An
+#    explicit ANTHROPIC_API_KEY overrides (you're paying per token regardless).
+#  • is_api_key_login() still hides known flat-rate account types as a backstop.
+session_windows=""
+[ -n "$five_reset$week_reset$five_pct$week_pct" ] && session_windows=1
+api_billed=""
+if [ -z "$session_windows" ] || [ -n "$ANTHROPIC_API_KEY" ]; then
+  [ -n "$(is_api_key_login)" ] && api_billed=1
+fi
 api_str=""
-if [ -n "$(is_api_key_login)" ]; then
+if [ -n "$api_billed" ]; then
   cost=$(jget "cost.total_cost_usd")
   tfresh=""; tcached=""; tout=""
   read -r tfresh tcached tout < <(token_totals "$transcript_path")
