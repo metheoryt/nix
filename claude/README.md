@@ -17,6 +17,9 @@ and pull on the other machines to propagate.** (See *Updating* below.)
 | `settings.json` | `settings.json` | statusline path is portable (`$HOME`) |
 | `statusline-command.sh` | `statusline-command.sh` | compact status line |
 | `balance-refresh.py` | `balance-refresh.py` | spend calculator (statusline depends on it) |
+| `CLAUDE.md` | `CLAUDE.md` | global instructions + memory imports (see below) |
+| `memory/global.md` | `memory/global.md` | global persistent memory store |
+| `hosts/<host>.md` | `host-memory.md` | per-host memory, chosen by hostname |
 | `skills/update-balance/` | `skills/update-balance` | per-entry link |
 | `agents/quick-tasks.md` | `agents/quick-tasks.md` | per-entry link |
 | `commands/` | `commands/` (per-entry) | empty for now (`.gitkeep`) |
@@ -40,6 +43,39 @@ balance/budget runtime files (`api-balance*.json`, `anchor.json`,
 (`enabledPlugins` + `extraKnownMarketplaces` — no absolute paths). The
 `plugins/` tree holds machine-specific absolute paths and is rebuilt on launch,
 so a fresh machine re-installs the declared plugins automatically.
+
+## Memory & knowledge base (three scopes)
+
+Two distinct things share the always-loaded `CLAUDE.md` mechanism:
+
+- **Instructions** you curate by hand.
+- **Persistent memories** Claude records itself (preferences, confirmed
+  feedback, learned context). A "memory store" is just a markdown file that
+  `CLAUDE.md` `@import`s — so it's read every session and appended to over time.
+
+| Scope | Instructions (curated) | Memories (Claude-written) | Synced |
+|---|---|---|---|
+| **Global** | `CLAUDE.md` | `memory/global.md` | everywhere |
+| **Per-host** | `hosts/<host>.md` (one file holds both) | per host |
+| **Per-project** | each repo's own `CLAUDE.md` | that repo's `.claude/memory/project.md` (or `CLAUDE.local.md`) | per repo |
+
+`CLAUDE.md` ends with `@memory/global.md` and `@host-memory.md`, so both stores
+load into every session. `host-memory.md` is a symlink to `hosts/<hostname>.md`
+chosen per machine (`ME-G614JV`, `g16`, `latitude5520`, …) — a host with no file
+yet gets an empty stub seeded by `bootstrap.sh`. `CLAUDE.md` also carries a
+*"Recording a memory — pick the scope"* section telling Claude which file to
+append to; since `CLAUDE.md` outranks the default system prompt, that overrides
+the harness's built-in per-project memory dir.
+
+**These memory files are git-tracked** — a memory is committed when *you* commit
+(not auto-committed each write), and that commit + push + pull is how memories
+sync across machines. The native fallback store
+(`~/.claude/projects/<encoded>/memory/`) stays gitignored and machine-local.
+Never put secrets in any tracked memory file.
+
+> The global `CLAUDE.md` keeps the gortex block inside its
+> `<!-- gortex:rules:start/end -->` markers; the memory section is appended
+> *after* the end marker so gortex's regeneration leaves it intact.
 
 ## Set up on a new machine
 

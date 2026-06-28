@@ -96,6 +96,16 @@ link() {
   fi
 }
 
+# host_id: this machine's hostname, sanitized to a filename. Prefers Windows
+# COMPUTERNAME (ME-G614JV), else `hostname` (g16 / latitude5520 on the nix
+# laptops). Must match modules/home/claude.nix (osConfig.networking.hostName)
+# and balance-refresh.py's device id.
+host_id() {
+  local h="${COMPUTERNAME:-$(hostname 2>/dev/null)}"
+  h="${h%%.*}"                                   # strip any DNS suffix
+  printf '%s' "$h" | tr -c 'A-Za-z0-9_-' '_'
+}
+
 # link_entries <subdir>: symlink each ENTRY inside claude/<subdir> into
 # ~/.claude/<subdir> individually, so machine-local additions coexist.
 link_entries() {
@@ -118,6 +128,32 @@ printf 'Bootstrapping Claude config\n  repo:  %s\n  live:  %s\n\n' "$SRC_DIR" "$
 for f in settings.json statusline-command.sh balance-refresh.py; do
   link "$SRC_DIR/$f" "$CLAUDE_DIR/$f"
 done
+
+# Memory & knowledge base. Global instructions + global memory store are shared
+# across all machines; the per-host file is chosen by hostname (imported by
+# CLAUDE.md as host-memory.md). All are git-tracked and loaded into every
+# session — see README.md "Memory & knowledge base".
+link "$SRC_DIR/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md"
+mkdir -p "$CLAUDE_DIR/memory"
+link "$SRC_DIR/memory/global.md" "$CLAUDE_DIR/memory/global.md"
+
+# Per-host memory: link claude/hosts/<host>.md -> ~/.claude/host-memory.md. Seed
+# an empty stub in the repo the first time a new host runs this, so the import
+# never dangles (commit it to start recording host-scoped memory there).
+HOST_ID="$(host_id)"
+host_src="$SRC_DIR/hosts/$HOST_ID.md"
+if [ ! -e "$host_src" ]; then
+  mkdir -p "$SRC_DIR/hosts"
+  {
+    printf '# Host: %s\n\n' "$HOST_ID"
+    printf '<!--\nPer-host memory + instructions for this machine. Symlinked to\n'
+    printf '~/.claude/host-memory.md and imported by claude/CLAUDE.md, so it loads ONLY\n'
+    printf 'when the hostname matches. Tracked in git, synced everywhere, inert on other\n'
+    printf 'hosts. Do NOT put secrets here.\n-->\n\n## Notes\n'
+  } > "$host_src"
+  printf '  + seeded host memory stub: %s\n' "$host_src"
+fi
+link "$host_src" "$CLAUDE_DIR/host-memory.md"
 
 # Entry-by-entry links (each skill subdir / agent file / command).
 link_entries skills
