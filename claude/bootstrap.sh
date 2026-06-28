@@ -75,6 +75,16 @@ link() {
     printf '  ! missing in repo, skipping: %s\n' "$src"
     return
   fi
+  # Already pointing at the repo file — possibly via a chain (home-manager links
+  # dest -> /nix/store/.../home-manager-files -> repo). `-ef` compares the final
+  # inode, so we skip (and crucially do NOT replace) Nix-managed symlinks; a
+  # direct readlink check would only match our own one-hop links and would clobber
+  # the HM ones, breaking the next `nixos-rebuild switch`.
+  if [ "$dest" -ef "$src" ]; then
+    printf '  = already linked: %s\n' "$dest"
+    skipped=$((skipped + 1))
+    return
+  fi
   if [ -L "$dest" ]; then
     if [ "$(readlink "$dest")" = "$src" ]; then
       printf '  = already linked: %s\n' "$dest"
@@ -155,10 +165,11 @@ if [ ! -e "$host_src" ]; then
 fi
 link "$host_src" "$CLAUDE_DIR/host-memory.md"
 
-# Entry-by-entry links (each skill subdir / agent file / command).
+# Entry-by-entry links (each skill subdir / agent file / command / hook).
 link_entries skills
 link_entries agents
 link_entries commands
+link_entries hooks
 
 # Prune empty backup dirs left behind by restores (keeps real backups).
 [ -d "$BAK_ROOT" ] && find "$BAK_ROOT" -type d -empty -delete 2>/dev/null

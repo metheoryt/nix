@@ -457,6 +457,10 @@ in {
       After = ["default.target"];
     };
     Service = {
+      # `gortex daemon start` spawns the daemon and the launcher exits, so the
+      # supervisor must treat it as forking (Type=simple would tear the daemon
+      # down when the launcher exits).
+      Type = "forking";
       ExecStart = "${gortex}/bin/gortex daemon start --no-progress";
       Restart = "on-failure";
       RestartSec = 5;

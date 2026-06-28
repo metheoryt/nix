@@ -9,6 +9,10 @@
 # Claude to ASK whether to run `gortex init` — never to run it unprompted.
 set -u
 
+# Only relevant on machines where gortex is actually installed (e.g. silent on
+# Windows / any host without it).
+command -v gortex >/dev/null 2>&1 || exit 0
+
 # Claude passes the session JSON on stdin; pull cwd from it, fall back to $PWD.
 cwd="$(jq -r '.cwd // empty' 2>/dev/null)"
 [ -n "$cwd" ] || cwd="$PWD"

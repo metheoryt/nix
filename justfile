@@ -41,10 +41,16 @@ build:
     sudo nixos-rebuild build --flake {{flake_dir}}#{{hostname}}
     @echo "✅ Build complete!"
 
+# Symlink versioned Claude config (claude/) into ~/.claude; safe beside home-manager
+claude-bootstrap:
+    @echo "🔗 Bootstrapping Claude config..."
+    @bash {{flake_dir}}/claude/bootstrap.sh
+
 # Build and switch to new configuration
 switch:
     @echo "🔧 Switching to new NixOS configuration..."
     sudo nixos-rebuild switch --flake {{flake_dir}}#{{hostname}}
+    @just claude-bootstrap
     @echo "✅ System switched successfully!"
 
 # Build and test configuration temporarily
@@ -66,6 +72,7 @@ update:
     @just update-rustdesk
     @just update-zed
     @just update-pycharm
+    @just claude-bootstrap
     @echo "✅ Flake inputs updated!"
 
 # Bump rustdesk-bin.nix to the latest upstream release (also run by `update`)
