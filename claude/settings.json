@@ -25,5 +25,17 @@
   },
   "agentPushNotifEnabled": true,
   "voiceEnabled": true,
-  "tui": "fullscreen"
+  "tui": "fullscreen",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/hooks/gortex-onboard-check.sh\""
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -3,17 +3,18 @@
   config,
   hostname,
   ...
-}:
-let
+}: let
   # Upstream 1.4.7 Flutter build, repackaged from the official .deb because
   # nixpkgs lags (rustdesk-flutter 1.4.5). Already wraps in WAYLAND_DISPLAY="".
-  rustdesk = pkgs.callPackage ./rustdesk-bin.nix { };
+  rustdesk = pkgs.callPackage ./rustdesk-bin.nix {};
   # Upstream Zed, repackaged from the official tarball (nixpkgs lags at 1.3.6).
-  zed-bin = pkgs.callPackage ./zed-bin.nix { };
+  zed-bin = pkgs.callPackage ./zed-bin.nix {};
   # nixpkgs jetbrains.pycharm bumped to latest upstream (it's the same tarball).
-  pycharm = pkgs.callPackage ./pycharm-bin.nix { };
-in
-{
+  pycharm = pkgs.callPackage ./pycharm-bin.nix {};
+  # Same derivation as the system package (modules/programs/development.nix);
+  # referenced here for the daemon service's ExecStart store path.
+  gortex = pkgs.callPackage ../../pkgs/gortex.nix {};
+in {
   imports = [
     # Claude Code config: version-controlled in claude/, symlinked into ~/.claude
     ./claude.nix
@@ -51,8 +52,8 @@ in
 
     (pkgs.symlinkJoin {
       name = "amnezia-vpn-wrapped";
-      paths = [ pkgs.amnezia-vpn ];
-      nativeBuildInputs = [ pkgs.makeWrapper ];
+      paths = [pkgs.amnezia-vpn];
+      nativeBuildInputs = [pkgs.makeWrapper];
       postBuild = ''
         wrapProgram $out/bin/AmneziaVPN \
           --prefix XDG_DATA_DIRS : "${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}"
@@ -72,7 +73,7 @@ in
     # GTK GUI (cameractrlsgtk) plus desktop entry & icon, wrapped with the
     # GTK3 typelib path so `import gi; gi.require_version('Gtk', '3.0')` works.
     (pkgs.cameractrls.overrideAttrs (old: {
-      nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.makeWrapper ];
+      nativeBuildInputs = (old.nativeBuildInputs or []) ++ [pkgs.makeWrapper];
       installPhase = ''
         runHook preInstall
         mkdir -p $out/bin $out/lib/python3.13/site-packages/CameraCtrls
@@ -82,7 +83,7 @@ in
         for file in cameractrls cameractrlsd cameraptzgame cameraptzmidi cameraptzspnav cameraview; do
           ln -s $out/lib/python3.13/site-packages/CameraCtrls/$file.py $out/bin/$file
         done
-        makeWrapper ${pkgs.python3.withPackages (ps: [ ps.pygobject3 ])}/bin/python3 $out/bin/cameractrlsgtk \
+        makeWrapper ${pkgs.python3.withPackages (ps: [ps.pygobject3])}/bin/python3 $out/bin/cameractrlsgtk \
           --add-flags $out/lib/python3.13/site-packages/CameraCtrls/cameractrlsgtk.py \
           --prefix GI_TYPELIB_PATH : "${pkgs.gtk3}/lib/girepository-1.0:${pkgs.glib}/lib/girepository-1.0:${pkgs.pango.out}/lib/girepository-1.0:${pkgs.gdk-pixbuf}/lib/girepository-1.0:${pkgs.harfbuzz}/lib/girepository-1.0:${pkgs.atk}/lib/girepository-1.0"
         install -Dm644 pkg/hu.irl.cameractrls.desktop $out/share/applications/hu.irl.cameractrls.desktop
@@ -339,12 +340,12 @@ in
         resize-with-right-button = true;
       };
       "org/gnome/desktop/wm/keybindings" = {
-        close = [ "<Alt>F4" ];
-        toggle-fullscreen = [ "F11" ];
-        switch-to-workspace-left = [ "<Control><Alt>Left" ];
-        switch-to-workspace-right = [ "<Control><Alt>Right" ];
-        move-to-workspace-left = [ "<Control><Alt><Shift>Left" ];
-        move-to-workspace-right = [ "<Control><Alt><Shift>Right" ];
+        close = ["<Alt>F4"];
+        toggle-fullscreen = ["F11"];
+        switch-to-workspace-left = ["<Control><Alt>Left"];
+        switch-to-workspace-right = ["<Control><Alt>Right"];
+        move-to-workspace-left = ["<Control><Alt><Shift>Left"];
+        move-to-workspace-right = ["<Control><Alt><Shift>Right"];
       };
       "org/gnome/settings-daemon/plugins/media-keys" = {
         custom-keybindings = [
@@ -432,8 +433,8 @@ in
           model = "claude-sonnet-4-6-latest";
           enable_thinking = false;
         };
-        favorite_models = [ ];
-        model_parameters = [ ];
+        favorite_models = [];
+        model_parameters = [];
       };
       agent_servers."claude-acp".type = "registry";
       ui_font_size = 16;
@@ -444,6 +445,23 @@ in
         dark = "One Dark";
       };
     };
+  };
+
+  # gortex code-intelligence daemon — holds the shared graph index that the
+  # MCP clients (Claude Code etc.) and the CLI query. Runs in the foreground
+  # under systemd; the sqlite backend persists to ~/.gortex so warm restarts
+  # skip re-indexing tracked repos.
+  systemd.user.services.gortex-daemon = {
+    Unit = {
+      Description = "gortex code-intelligence daemon";
+      After = ["default.target"];
+    };
+    Service = {
+      ExecStart = "${gortex}/bin/gortex daemon start --no-progress";
+      Restart = "on-failure";
+      RestartSec = 5;
+    };
+    Install.WantedBy = ["default.target"];
   };
 
   programs.home-manager.enable = true;

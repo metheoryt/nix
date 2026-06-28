@@ -11,18 +11,22 @@
 #
 # Secrets, transcripts, caches and plugins/ are intentionally NOT linked — they
 # stay machine-local in ~/.claude (see claude/.gitignore for the full list).
-{ config, osConfig, ... }:
-let
+{
+  config,
+  osConfig,
+  ...
+}: let
   # Repo checkout location on this machine. The fish helpers cd to ~/nix, so the
   # flake lives there. Change this if you clone the repo elsewhere.
   claude = "${config.home.homeDirectory}/nix/claude";
   link = config.lib.file.mkOutOfStoreSymlink;
-in
-{
+in {
   # Whole-file links.
   home.file.".claude/settings.json".source = link "${claude}/settings.json";
   home.file.".claude/statusline-command.sh".source = link "${claude}/statusline-command.sh";
   home.file.".claude/balance-refresh.py".source = link "${claude}/balance-refresh.py";
+  # SessionStart hook: prompt to onboard repos that don't use gortex yet.
+  home.file.".claude/hooks/gortex-onboard-check.sh".source = link "${claude}/hooks/gortex-onboard-check.sh";
 
   # Memory & knowledge base (always-loaded CLAUDE.md hierarchy). Global
   # instructions + global memory store are shared across machines; the per-host
