@@ -20,24 +20,30 @@ elsewhere to sync. Do NOT put secrets here.
 
 ## Context
 
-## Tooling — Gortex (code-intelligence MCP/daemon)
+## Gortex
 
-- Currently **local-only**: the `gortex` MCP entry (`.mcp.json`), index dir
-  (`.gortex/`), and any config are gitignored and there's no `.gortex.yaml`, so
-  the integration is per-developer — teammates and CI don't get it. Not yet
-  shared/committed anywhere.
-- **Trust it for static facts; verify anything dynamic.** Symbol search, typed
-  `find_usages`/`get_callers`, impact analysis, and `analyze annotation_users`
-  (decorator/task census) are reliable — on Python they're driven by the
-  LSP-pyright provider (+ django-stubs when installed), at confidence 1.
-- **Do NOT trust it on dynamic wiring.** Signals (`@receiver`), reverse-FK
-  accessors (`obj.x_set`), template strings (`render(req,"x.html")`), URL routes
-  (`analyze routes`), and model↔table maps (`analyze models`) produce no edges or
-  confident garbage. Fall back to `search_text`/grep for these.
-- **Its "dead code / 0 usages / safe to remove" signal is a false positive on
+- Gortex's Python resolution is near-compiler-grade for the STATIC OO layer
+  (classes, methods, inheritance/MRO, imports, explicit calls, direct ORM calls
+  like `Model.objects.filter`). It degrades on framework "magic" — true for
+  Django/DRF especially — so trust it BY TIER, not blindly:
+  - **Trust:** views/models/serializers/forms/admin classes & their methods, CBV
+    mixin MRO, statically-typed manager calls.
+  - **Verify (best-effort framework analyzers):** URLconf routing, DRF
+    `router.register`, model↔table — check coverage with
+    `analyze routes|route_frameworks|models` and spot-check against the source.
+  - **Often missed or only `text_matched`:** signals (`@receiver`/`.connect`),
+    reverse-FK accessors (`x.y_set`), settings string lists (MIDDLEWARE/
+    INSTALLED_APPS), template-name→`.html`, `get_user_model()`/`apps.get_model()`,
+    dynamic queryset methods, Celery `@shared_task`, admin auto-registration.
+  - Every edge carries a confidence tier (`lsp_resolved` … `text_matched`), so
+    speculative links are labelled — that's gortex's edge over grep here.
+- Its **"dead code / 0 usages / safe to remove" signal is a false positive on
   framework-invoked code** (signal handlers, middleware `__call__`, dunders).
   Never act on it for decorated/framework-called code without a text-search
   cross-check.
 - `graph_stats`' `semantic` block under-reports (the native `python-types` line
-  can show ~0 edges); the real resolver is the `lsp-pyright` provider. Judge
+  can show ~0 edges); the real resolver is the `lsp-pyright` provider — judge
   coverage from `find_usages` output, not that block.
+- Integration is reproducible ONLY if `.gortex.yaml` + a gortex server entry in
+  `.mcp.json` are committed. A local daemon merely *tracking* a repo works for you
+  but carries nothing to teammates/CI — run `gortex init` to commit the wiring.
