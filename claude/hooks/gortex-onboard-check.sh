@@ -1,17 +1,16 @@
 #!/usr/bin/env bash
-# Claude Code SessionStart hook — nudge to onboard repos that don't use gortex.
+# Claude Code SessionStart hook — nudge to adopt gortex.
 #
-# Fires at the start of every session. Stays completely silent unless:
-#   - the cwd is inside a git repo, AND
-#   - that repo has no gortex integration, AND
-#   - the repo hasn't opted out via a .gortex-skip marker.
-# When all hold, it prints guidance (added to the session as context) telling
-# Claude to ASK whether to run `gortex init` — never to run it unprompted.
+# Fires at the start of every session, only when cwd is inside a git repo.
+# Two ASK-only cases (the hook never acts unprompted — it only adds guidance
+# to the session asking Claude to check with the user):
+#   1. gortex is NOT installed on this machine → suggest installing it.
+#      Silence permanently with ~/.gortex-install-skip.
+#   2. gortex IS installed but this repo isn't integrated → suggest `gortex init`.
+#      Silence per-repo with .gortex-skip; auto-skipped when .gortex.yaml or a
+#      gortex entry in .mcp.json already exists.
+# Stays completely silent outside a git repo or when the relevant opt-out is set.
 set -u
-
-# Only relevant on machines where gortex is actually installed (e.g. silent on
-# Windows / any host without it).
-command -v gortex >/dev/null 2>&1 || exit 0
 
 # Claude passes the session JSON on stdin; pull cwd from it, fall back to $PWD.
 cwd="$(jq -r '.cwd // empty' 2>/dev/null)"
@@ -21,6 +20,24 @@ cwd="$(jq -r '.cwd // empty' 2>/dev/null)"
 root="$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null)" || exit 0
 [ -n "$root" ] || exit 0
 
+# --- Case 1: gortex not installed on this machine -----------------------------
+if ! command -v gortex >/dev/null 2>&1; then
+  # Permanent opt-out so a machine that deliberately lacks gortex isn't nagged.
+  [ -e "$HOME/.gortex-install-skip" ] && exit 0
+  cat <<'EOF'
+Gortex (a code-intelligence engine / MCP server) is NOT installed on this machine,
+yet the current directory is a git repo where it would help — graph-based code
+navigation, impact analysis before edits, and cheaper / more reliable search than
+grep. Ask the user ONCE whether they'd like to install it; ask them for their
+preferred install method (or point them at the gortex install docs). Do NOT install
+without explicit confirmation. Once installed, run `gortex init` in the repo to wire
+up per-repo integration. If they decline, they can run `touch ~/.gortex-install-skip`
+to silence this nudge permanently on this machine.
+EOF
+  exit 0
+fi
+
+# --- Case 2: gortex installed, but this repo isn't integrated -----------------
 # Already integrated, or explicitly silenced → say nothing.
 [ -e "$root/.gortex.yaml" ] && exit 0
 [ -e "$root/.gortex-skip" ] && exit 0
