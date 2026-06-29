@@ -54,6 +54,7 @@ in {
       # host-memory.md, which claude/CLAUDE.md @imports.
       ".claude/CLAUDE.md".source = link "${claude}/CLAUDE.md";
       ".claude/memory/global.md".source = link "${claude}/memory/global.md";
+      ".claude/memory/practices.md".source = link "${claude}/memory/practices.md";
       ".claude/host-memory.md".source = link "${claude}/hosts/${osConfig.networking.hostName}.md";
     }
     # Auto-discovered entry dirs (kept in sync with bootstrap.sh's link_entries).

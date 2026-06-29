@@ -217,4 +217,5 @@ delete stale entries rather than letting them pile up.
   local; don't expect it to follow you across machines.
 
 @memory/global.md
+@memory/practices.md
 @host-memory.md

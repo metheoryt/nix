@@ -146,6 +146,7 @@ done
 link "$SRC_DIR/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md"
 mkdir -p "$CLAUDE_DIR/memory"
 link "$SRC_DIR/memory/global.md" "$CLAUDE_DIR/memory/global.md"
+link "$SRC_DIR/memory/practices.md" "$CLAUDE_DIR/memory/practices.md"
 
 # Per-host memory: link claude/hosts/<host>.md -> ~/.claude/host-memory.md. Seed
 # an empty stub in the repo the first time a new host runs this, so the import
