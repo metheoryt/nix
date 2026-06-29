@@ -47,3 +47,20 @@ elsewhere to sync. Do NOT put secrets here.
 - Integration is reproducible ONLY if `.gortex.yaml` + a gortex server entry in
   `.mcp.json` are committed. A local daemon merely *tracking* a repo works for you
   but carries nothing to teammates/CI — run `gortex init` to commit the wiring.
+- **General principle — align a repo to its static analyzer.** Gortex's
+  resolution quality is bounded by what the language's underlying analyzer can
+  resolve (Python → `lsp-pyright`). The highest-leverage way to make a
+  gortex-backed repo align better is therefore to tighten that analyzer's view:
+  type hints, installed/typed deps, framework stubs. When working in a
+  gortex-backed repo, treat weak resolution as fixable — proactively offer the
+  alignment wins that fit its stack rather than accepting `text_matched` edges.
+- **`/gortex-align` skill does the alignment.** When a gortex-backed repo could
+  be tuned — wiring not committed, or a Python project resolving to
+  `text_matched` — offer the `gortex-align` skill. It detects the daemon (won't
+  install the binary — that's machine provisioning), commits the
+  `.gortex.yaml`/`.mcp.json` wiring, verifies index health, and for Python sets
+  up pyright governance from a bundled resolution-focused `pyrightconfig.json`
+  (resolution knobs like `useLibraryCodeForTypes`/venv vs gap diagnostics that
+  surface every `text_matched`-bound spot; adopt at `standard`, ratchet to
+  `strict`). Pyright won't load the django-stubs mypy plugin, so the "often
+  missed" tier above still stands.
