@@ -202,5 +202,19 @@ the scoped file below instead of the default per-project memory dir:
 One bullet per fact under a topical `##` heading. Keep it curated — edit or
 delete stale entries rather than letting them pile up.
 
+### Wiring — no per-project action needed
+
+- **Global + per-host** load in EVERY project automatically: `modules/home/claude.nix`
+  symlinks `CLAUDE.md`, `memory/global.md`, and `hosts/<hostname>.md` (as
+  `host-memory.md`) into `~/.claude` via `mkOutOfStoreSymlink`. Nothing to set up
+  per repo — commit here, pull on the other machine to propagate.
+- **Per-project** memory lives *inside the target repo* (its `CLAUDE.md` /
+  `.claude/memory/project.md` / `CLAUDE.local.md`) and Claude auto-discovers it
+  from the working directory. It is NOT wired through this flake — each repo
+  carries its own.
+- **Not synced:** the harness auto-memory at `~/.claude/projects/<slug>/memory/`
+  is path-keyed and machine-local — deliberately not symlinked here. Leave it
+  local; don't expect it to follow you across machines.
+
 @memory/global.md
 @host-memory.md
