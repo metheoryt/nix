@@ -42,8 +42,8 @@ in {
 
     interval = lib.mkOption {
       type = lib.types.str;
-      default = "hourly";
-      description = "systemd OnCalendar expression controlling how often a pull is attempted.";
+      default = "*:0/5";
+      description = "systemd OnCalendar expression controlling how often a pull is attempted (default: every 5 min).";
     };
   };
 
@@ -98,7 +98,7 @@ in {
       timerConfig = {
         OnCalendar = cfg.interval;
         Persistent = true; # catch up after the machine was off
-        RandomizedDelaySec = "5m";
+        RandomizedDelaySec = "30s"; # small spread; must stay well under the interval
       };
     };
   };
