@@ -10,6 +10,7 @@
     # System modules
     ../../modules/system/base.nix
     ../../modules/system/laptop.nix
+    ../../modules/system/self-update.nix
 
     # Desktop environment
     ../../modules/desktop/gnome.nix
@@ -49,6 +50,10 @@
 
   # Flatpak support
   services.flatpak.enable = true;
+
+  # Keep the flake repo auto-pulled (Claude config/memory go live via symlinks;
+  # system changes still wait for `just switch`).
+  services.nixRepoAutoPull.enable = true;
 
   # Host-specific packages
   environment.systemPackages = with pkgs; [
