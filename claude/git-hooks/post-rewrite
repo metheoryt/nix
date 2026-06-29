@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Fires after `git pull --rebase` / rebase / commit --amend. Re-link Claude
+# config — see _refresh-claude-config. (Reads nothing from stdin by design.)
+exec "$(dirname "$0")/_refresh-claude-config"

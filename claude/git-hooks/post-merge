@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Fires after `git pull` (merge). Re-link Claude config — see _refresh-claude-config.
+exec "$(dirname "$0")/_refresh-claude-config"

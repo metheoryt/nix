@@ -62,7 +62,12 @@ Two distinct things share the always-loaded `CLAUDE.md` mechanism:
 `CLAUDE.md` ends with `@memory/global.md` and `@host-memory.md`, so both stores
 load into every session. `host-memory.md` is a symlink to `hosts/<hostname>.md`
 chosen per machine (`ME-G614JV`, `g16`, `latitude5520`, …) — a host with no file
-yet gets an empty stub seeded by `bootstrap.sh`. `CLAUDE.md` also carries a
+yet gets an empty stub seeded by `bootstrap.sh`. The per-project store
+(`<repo>/.claude/memory/project.md`) isn't `@import`ed — instead the
+`project-memory-check.sh` SessionStart hook loads it from whatever repo you're in
+(merged with global + per-host), and offers to start tracking it in repos that
+don't have one yet (silence per-repo with an empty `.claude/memory/.skip`).
+`CLAUDE.md` also carries a
 *"Recording a memory — pick the scope"* section telling Claude which file to
 append to; since `CLAUDE.md` outranks the default system prompt, that overrides
 the harness's built-in per-project memory dir.
@@ -121,9 +126,30 @@ The links are live, so the loop is just normal git:
 1. Edit a skill/agent/statusline/etc. — either here, or via `~/.claude/...`
    while working in *any* other repo (it's the same file through the symlink).
 2. `cd ~/nix && git add claude/ && git commit && git push`.
-3. On the other machines: `git pull`. New files need `bootstrap.sh` (or a nix
-   rebuild) re-run to create their links; edits to already-linked files are
-   picked up with no extra step.
+3. On the other machines: `git pull`. Edits to already-linked files are live
+   immediately (no step). New *files* need their symlink created — but that's
+   now automatic (see below).
+
+### When do I re-run `bootstrap.sh`?
+
+Almost never — only **once per new non-nix machine** (the clone step above).
+After that first run installs the git-hook auto-refresh, you don't re-run it by
+hand:
+
+- **Non-nix machines (Windows/macOS):** `bootstrap.sh` points this clone's
+  `core.hooksPath` at `claude/git-hooks/`, so `post-merge` / `post-rewrite` /
+  `post-checkout` re-link automatically after every `git pull` /
+  `pull --rebase` / checkout. Silent when nothing changed; prints a one-liner
+  when it links a new entry. (If *you* already set a custom `core.hooksPath`,
+  bootstrap won't touch it — re-run bootstrap manually after adding files.)
+- **NixOS laptops:** `just switch` owns the links; the git hooks no-op there.
+
+**No manual sync between the two mechanisms.** Both `bootstrap.sh`
+(`link_entries`) and `modules/home/claude.nix` (`linkEntries` via `readDir`)
+auto-discover everything under `hooks/`, `skills/`, `agents/`, `commands/`. Drop
+a new file in one of those dirs and commit it — nothing else to wire up. (nix
+reads git-*tracked* files, so commit the new entry for `switch` to see it;
+`bootstrap.sh` reads the working tree and links it right away.)
 
 ---
 

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Fires after `git checkout` / fresh clone checkout / branch switch. Re-link
+# Claude config — see _refresh-claude-config. (Ignores git's three positional args.)
+exec "$(dirname "$0")/_refresh-claude-config"

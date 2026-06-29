@@ -192,8 +192,12 @@ the scoped file below instead of the default per-project memory dir:
 - **Per-host** — specific to THIS machine (installed tooling, local paths,
   hardware quirks) → `~/.claude/host-memory.md`
 - **Per-project** — specific to one repo → that repo's own `CLAUDE.md`, or
-  `<repo>/.claude/memory/project.md` to keep it out of the always-loaded file;
-  for repos you can't commit into, `CLAUDE.local.md` (add to its .gitignore).
+  `<repo>/.claude/memory/project.md` to keep it out of the repo's root
+  `CLAUDE.md`. The `project-memory-check.sh` SessionStart hook auto-loads
+  `project.md` in every repo (merged with global + per-host memory) and offers
+  to start tracking it where it doesn't exist yet — so it's git-tracked and
+  synced like the other scopes, with no per-repo `@import` wiring. For repos you
+  can't commit into, `CLAUDE.local.md` (add to its .gitignore).
 
 One bullet per fact under a topical `##` heading. Keep it curated — edit or
 delete stale entries rather than letting them pile up.

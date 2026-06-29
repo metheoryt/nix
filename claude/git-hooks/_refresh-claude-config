@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Shared git-hook body: re-link this repo's Claude config after the working tree
+# changes (pull / rebase / checkout), so a new hook/skill/agent/command added on
+# another machine is wired up without remembering to run bootstrap by hand.
+#
+# Installed as core.hooksPath by claude/bootstrap.sh; the post-merge /
+# post-rewrite / post-checkout entrypoints in this dir all exec this script.
+#
+# No-op on NixOS, where `nixos-rebuild switch` (modules/home/claude.nix) owns the
+# symlinks — running bootstrap there could race home-manager. Silent when nothing
+# changed; prints a one-liner when it links new entries; dumps full output only on
+# failure. Never fails the git operation (always exits 0).
+set -u
+
+[ -e /etc/NIXOS ] && exit 0
+
+repo="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+boot="$repo/claude/bootstrap.sh"
+[ -f "$boot" ] || exit 0
+
+out="$(bash "$boot" 2>&1)"
+status=$?
+
+if [ "$status" -ne 0 ] || ! printf '%s' "$out" | grep -q 'failed=0'; then
+  printf '%s\n' "$out"                       # something broke — show everything
+  exit 0
+fi
+
+linked="$(printf '%s' "$out" | sed -n 's/.*linked=\([0-9]*\).*/\1/p' | tail -1)"
+if [ "${linked:-0}" -gt 0 ]; then
+  printf '\342\206\273 Claude config: linked %s new entr%s (bootstrap)\n' \
+    "$linked" "$([ "$linked" = 1 ] && printf 'y' || printf 'ies')"
+fi
+exit 0

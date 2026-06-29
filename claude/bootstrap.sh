@@ -171,6 +171,30 @@ link_entries agents
 link_entries commands
 link_entries hooks
 
+# Auto-refresh: point this clone's git hooks at claude/git-hooks so future pulls
+# (merge / rebase / checkout) re-link without a manual bootstrap run. core.hooksPath
+# is LOCAL (per-clone) config, so this only affects this checkout. Skipped on NixOS,
+# where `nixos-rebuild switch` owns the links — the hooks no-op there anyway.
+install_git_hooks() {
+  [ -e /etc/NIXOS ] && return 0
+  command -v git >/dev/null 2>&1 || return 0
+  local repo hp cur
+  repo="$(git -C "$SRC_DIR" rev-parse --show-toplevel 2>/dev/null)" || return 0
+  hp="$SRC_DIR/git-hooks"
+  [ -d "$hp" ] || return 0
+  cur="$(git -C "$repo" config --local --get core.hooksPath 2>/dev/null || true)"
+  if [ "$cur" = "$hp" ]; then
+    printf '  = git hooks already installed (core.hooksPath)\n'
+  elif [ -n "$cur" ]; then
+    # Respect a hooksPath the user set themselves — don't clobber it.
+    printf '  ! core.hooksPath already set to %s — leaving it; auto-refresh not installed\n' "$cur"
+  else
+    git -C "$repo" config --local core.hooksPath "$hp" \
+      && printf '  + git hooks installed (core.hooksPath -> %s)\n' "$hp"
+  fi
+}
+install_git_hooks
+
 # Prune empty backup dirs left behind by restores (keeps real backups).
 [ -d "$BAK_ROOT" ] && find "$BAK_ROOT" -type d -empty -delete 2>/dev/null
 
