@@ -15,10 +15,12 @@ elsewhere to sync. Do NOT put secrets here.
 
 - **Git-sync protocol — keep work synced across machines, agents do it
   themselves.** Applies to every branch in every repo:
-  - **Before acting on code:** pull and rebase/merge the local branch onto its
-    remote first (`git pull --rebase`, or `git fetch && git rebase
-    origin/<branch>`). Start from an up-to-date base — never commit on top of a
-    stale branch.
+  - **Before acting on code:** a background timer fetches every repo every ~10
+    min (NixOS: `services.gitAutoFetch`; Windows: the `git-autofetch` Scheduled
+    Task), so `git status` / the prompt already show "behind by N" without you
+    fetching. Check that, and if behind, pull+rebase before working (`git pull
+    --rebase`). Start from an up-to-date base — never commit on a stale branch.
+    The timer is fetch-only (refs); it never pulls, so the actual pull is yours.
   - **After making changes:** commit and push the work yourself, without waiting
     to be told. Don't leave work uncommitted between turns.
   - **Cooldown ~10 min:** throttle these sync operations — don't pull or

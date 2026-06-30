@@ -11,6 +11,7 @@
     ../../modules/system/base.nix
     ../../modules/system/laptop.nix
     ../../modules/system/self-update.nix
+    ../../modules/system/git-autofetch.nix
 
     # Desktop environment
     ../../modules/desktop/gnome.nix
@@ -54,6 +55,10 @@
   # Keep the flake repo auto-pulled (Claude config/memory go live via symlinks;
   # system changes still wait for `just switch`).
   services.nixRepoAutoPull.enable = true;
+
+  # Background `git fetch` of all repos under /home/me every 10 min, so
+  # "behind by N" is visible without fetching first (no pull — refs only).
+  services.gitAutoFetch.enable = true;
 
   # Host-specific packages
   environment.systemPackages = with pkgs; [
