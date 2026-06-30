@@ -1,7 +1,7 @@
 # Codex support, synced to the Claude setup
 
 **Date:** 2026-06-30
-**Status:** Approved design — ready for implementation plan
+**Status:** Implemented (2026-06-30)
 
 ## Goal
 
