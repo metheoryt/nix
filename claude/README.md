@@ -12,12 +12,18 @@ and pull on the other machines to propagate.** (See *Updating* below.)
 
 ## What's tracked
 
+> **Note:** `AGENTS.md` is the canonical instruction file; `CLAUDE.md` (both here
+> and at the repo root) is an in-repo symlink → `AGENTS.md`, because Claude Code
+> reads `CLAUDE.md` while Codex reads `AGENTS.md` — one source, each tool reads
+> its own filename. Mentions of "`CLAUDE.md`" below refer to that same shared
+> content.
+
 | Path | Linked into `~/.claude` as | Notes |
 |---|---|---|
 | `settings.json` | `settings.json` | statusline path is portable (`$HOME`) |
 | `statusline-command.sh` | `statusline-command.sh` | compact status line |
 | `balance-refresh.py` | `balance-refresh.py` | spend calculator (statusline depends on it) |
-| `CLAUDE.md` | `CLAUDE.md` | global instructions + memory imports (see below) |
+| `AGENTS.md` | `CLAUDE.md` | canonical global instructions + memory imports (see below); `claude/CLAUDE.md` is a symlink → it, and `~/.codex/AGENTS.md` links here too |
 | `memory/global.md` | `memory/global.md` | global persistent memory store |
 | `hosts/<host>.md` | `host-memory.md` | per-host memory, chosen by hostname |
 | `skills/update-balance/` | `skills/update-balance` | per-entry link |
@@ -27,6 +33,18 @@ and pull on the other machines to propagate.** (See *Updating* below.)
 `skills/`, `agents/` and `commands/` are linked **entry-by-entry**, so any
 machine-local skill/agent you drop directly into `~/.claude` keeps working
 alongside the tracked ones.
+
+### Codex (`~/.codex`) — same setup, shared content
+
+Codex is Claude-Code-compatible, so it reuses **this** config as its source of
+truth rather than a separate copy. The tool-agnostic content here — `memory/`,
+`hooks/`, `skills/`, and the canonical `AGENTS.md` — is symlinked into **both**
+`~/.claude` and `~/.codex`. Only the format-divergent files live in the
+repo-root `codex/` dir (`hooks.json`, `agents/*.toml`) and link into `~/.codex`
+alone. Machine-local Codex state (`config.toml`, `auth.json`, sessions, caches)
+is git-ignored (`codex/.gitignore`) and never tracked. Both `bootstrap.sh` and
+`modules/home/codex.nix` produce the identical `~/.codex` tree — the same
+dual-mechanism model as the Claude side.
 
 ## What's NOT tracked (and never copy in)
 
