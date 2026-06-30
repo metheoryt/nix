@@ -116,19 +116,19 @@ host_id() {
   printf '%s' "$h" | tr -c 'A-Za-z0-9_-' '_'
 }
 
-# link_entries <subdir>: symlink each ENTRY inside claude/<subdir> into
-# ~/.claude/<subdir> individually, so machine-local additions coexist.
-link_entries() {
-  local sub="$1"
-  local src_sub="$SRC_DIR/$sub"
+# link_entries_into <abs-src-sub> <abs-dest-sub>: symlink each ENTRY inside the
+# source subdir into the dest subdir individually, so machine-local additions
+# coexist with tracked ones.
+link_entries_into() {
+  local src_sub="$1" dest_sub="$2"
   [ -d "$src_sub" ] || return
-  mkdir -p "$CLAUDE_DIR/$sub"
+  mkdir -p "$dest_sub"
   local entry base
   for entry in "$src_sub"/* "$src_sub"/.[!.]*; do
     [ -e "$entry" ] || continue           # no matches → skip the literal glob
     base="$(basename "$entry")"
     [ "$base" = ".gitkeep" ] && continue  # placeholder, not real config
-    link "$entry" "$CLAUDE_DIR/$sub/$base"
+    link "$entry" "$dest_sub/$base"
   done
 }
 
@@ -143,7 +143,8 @@ done
 # across all machines; the per-host file is chosen by hostname (imported by
 # CLAUDE.md as host-memory.md). All are git-tracked and loaded into every
 # session — see README.md "Memory & knowledge base".
-link "$SRC_DIR/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md"
+# Instruction file: AGENTS.md is canonical; link ~/.claude/CLAUDE.md to it directly.
+link "$SRC_DIR/AGENTS.md" "$CLAUDE_DIR/CLAUDE.md"
 mkdir -p "$CLAUDE_DIR/memory"
 link "$SRC_DIR/memory/global.md" "$CLAUDE_DIR/memory/global.md"
 link "$SRC_DIR/memory/practices.md" "$CLAUDE_DIR/memory/practices.md"
@@ -167,10 +168,38 @@ fi
 link "$host_src" "$CLAUDE_DIR/host-memory.md"
 
 # Entry-by-entry links (each skill subdir / agent file / command / hook).
-link_entries skills
-link_entries agents
-link_entries commands
-link_entries hooks
+link_entries_into "$SRC_DIR/skills"   "$CLAUDE_DIR/skills"
+link_entries_into "$SRC_DIR/agents"   "$CLAUDE_DIR/agents"
+link_entries_into "$SRC_DIR/commands" "$CLAUDE_DIR/commands"
+link_entries_into "$SRC_DIR/hooks"    "$CLAUDE_DIR/hooks"
+
+# ── Codex config (~/.codex) ─────────────────────────────────────────────────
+# Codex is Claude-Code-compatible: it SHARES memory, hook scripts and skills from
+# claude/ (single source of truth); only the format-divergent files live in
+# codex/ (hooks.json, agents/*.toml). config.toml / auth / sessions stay
+# machine-local — see codex/.gitignore. HOST_ID / host_src are reused from the
+# Claude section above.
+CODEX_SRC="$(cd "$SRC_DIR/../codex" && pwd)"
+CODEX_DIR="${CODEX_CONFIG_DIR:-$HOME/.codex}"
+mkdir -p "$CODEX_DIR"
+printf '\nBootstrapping Codex config\n  live:  %s\n\n' "$CODEX_DIR"
+
+# Instruction file: Codex reads AGENTS.md; point at claude/AGENTS.md (canonical).
+link "$SRC_DIR/AGENTS.md" "$CODEX_DIR/AGENTS.md"
+
+# Shared memory & per-host file (same sources Claude uses).
+mkdir -p "$CODEX_DIR/memory"
+link "$SRC_DIR/memory/global.md"    "$CODEX_DIR/memory/global.md"
+link "$SRC_DIR/memory/practices.md" "$CODEX_DIR/memory/practices.md"
+link "$host_src"                    "$CODEX_DIR/host-memory.md"
+
+# Codex-specific standalone hooks file.
+link "$CODEX_SRC/hooks.json" "$CODEX_DIR/hooks.json"
+
+# Entry dirs: skills + hook scripts shared from claude/; agents from codex/.
+link_entries_into "$SRC_DIR/skills"   "$CODEX_DIR/skills"
+link_entries_into "$SRC_DIR/hooks"    "$CODEX_DIR/hooks"
+link_entries_into "$CODEX_SRC/agents" "$CODEX_DIR/agents"
 
 # Auto-refresh: point this clone's git hooks at claude/git-hooks so future pulls
 # (merge / rebase / checkout) re-link without a manual bootstrap run. core.hooksPath
