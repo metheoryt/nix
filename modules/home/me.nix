@@ -18,6 +18,8 @@ in {
   imports = [
     # Claude Code config: version-controlled in claude/, symlinked into ~/.claude
     ./claude.nix
+    # Codex config: shares claude/ content, codex/-specific files, symlinked into ~/.codex
+    ./codex.nix
   ];
 
   home.username = "me";

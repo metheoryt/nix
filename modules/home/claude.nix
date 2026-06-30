@@ -52,7 +52,8 @@ in {
       # instructions + global memory store are shared across machines; the
       # per-host file is selected by this machine's hostname and surfaced as
       # host-memory.md, which claude/CLAUDE.md @imports.
-      ".claude/CLAUDE.md".source = link "${claude}/CLAUDE.md";
+      # AGENTS.md is canonical; ~/.claude/CLAUDE.md links straight to the real file.
+      ".claude/CLAUDE.md".source = link "${claude}/AGENTS.md";
       ".claude/memory/global.md".source = link "${claude}/memory/global.md";
       ".claude/memory/practices.md".source = link "${claude}/memory/practices.md";
       ".claude/host-memory.md".source = link "${claude}/hosts/${osConfig.networking.hostName}.md";
