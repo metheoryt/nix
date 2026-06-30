@@ -58,9 +58,14 @@ This "Codex" is Claude-Code-compatible: same hooks-JSON schema, same
 1. **Sync model:** single source of truth — shared content lives under `claude/`
    and is symlinked into both `~/.claude` and `~/.codex`. Only divergent files
    live in a new `codex/` dir.
-2. **Global `AGENTS.md`:** symlink `~/.codex/AGENTS.md` → `claude/CLAUDE.md`
-   directly (zero maintenance; the "Claude" wording in the text is accepted since
-   the rules are tool-agnostic).
+2. **Global instruction file — `AGENTS.md` is canonical:** Claude Code does **not**
+   read `AGENTS.md` natively (anthropics/claude-code #34235, still unimplemented as
+   of 2026-03; no reliable fallback). So the single real file is **`claude/AGENTS.md`**
+   and `claude/CLAUDE.md` becomes an **in-repo git symlink → `AGENTS.md`**. Live
+   links: `~/.claude/CLAUDE.md` and `~/.codex/AGENTS.md` both point at
+   `claude/AGENTS.md`. One real file, edited in one place; each tool reads its
+   expected filename. (The "Claude" wording in the text is accepted — the rules are
+   tool-agnostic.)
 3. **Platforms:** both — new `modules/home/codex.nix` (Linux) **and** extended
    `claude/bootstrap.sh` (Windows). Codex wired on `g16`, `latitude5520`, and the
    Windows machine.
@@ -76,9 +81,10 @@ This "Codex" is Claude-Code-compatible: same hooks-JSON schema, same
 6. **Gortex sub-agents** (`gortex-search/impact.toml`) **not tracked** —
    gortex-provided, not in `claude/agents` either. Left machine-local;
    `link_entries` coexists with them.
-7. **Repo-root `AGENTS.md`** (the project instruction file) → committed as a
-   **git symlink to `./CLAUDE.md`** (single source; relies on the same
-   `core.symlinks` + Windows Developer Mode the bootstrap already requires).
+7. **Repo-root instruction file — `AGENTS.md` canonical:** same flip as the global
+   file. Root **`AGENTS.md`** is the real tracked project-instruction file; root
+   **`CLAUDE.md`** becomes a **git symlink → `AGENTS.md`**. Relies on the same
+   `core.symlinks` + Windows Developer Mode the bootstrap already requires.
    Fallback: tracked copy if the in-git symlink proves troublesome on Windows.
 8. **gitignore the machine-local Codex state** so nothing under `~/.codex` can be
    accidentally committed if copied into `codex/`.
@@ -89,7 +95,7 @@ This "Codex" is Claude-Code-compatible: same hooks-JSON schema, same
 
 | `~/.codex/` target              | Source                       | Shared |
 |---------------------------------|------------------------------|--------|
-| `AGENTS.md`                     | `claude/CLAUDE.md`           | shared |
+| `AGENTS.md`                     | `claude/AGENTS.md`           | shared |
 | `memory/global.md`              | `claude/memory/global.md`    | shared |
 | `memory/practices.md`           | `claude/memory/practices.md` | shared |
 | `host-memory.md`                | `claude/hosts/<host>.md`     | shared |
@@ -131,6 +137,23 @@ This "Codex" is Claude-Code-compatible: same hooks-JSON schema, same
 
 ## Wiring changes
 
+### Instruction-file flip (`claude/` and repo root)
+
+Make `AGENTS.md` the canonical real file; `CLAUDE.md` becomes an in-repo git
+symlink to it. Two places:
+
+- **Global:** `git mv claude/CLAUDE.md claude/AGENTS.md`, then
+  `ln -s AGENTS.md claude/CLAUDE.md` (tracked symlink).
+- **Root:** delete the untracked transformed `AGENTS.md` first, then
+  `git mv CLAUDE.md AGENTS.md` and `ln -s AGENTS.md CLAUDE.md`.
+
+Retarget the existing Claude instruction-file links to the real file (one hop, no
+symlink chain): `~/.claude/CLAUDE.md` → `claude/AGENTS.md` in both
+`modules/home/claude.nix` (line 55) and the `bootstrap.sh` Claude section
+(line 146). The in-repo `claude/CLAUDE.md` symlink remains for repo
+discoverability and any docs that reference the path; it resolves to the same
+file regardless.
+
 ### `claude/bootstrap.sh`
 
 - Generalize `link_entries` to take explicit src + dest bases (e.g.
@@ -138,8 +161,8 @@ This "Codex" is Claude-Code-compatible: same hooks-JSON schema, same
   calls to use it. The generic `link` helper is reused unchanged.
 - Add a "Bootstrapping Codex config" pass:
   - `CODEX_DIR="${CODEX_CONFIG_DIR:-$HOME/.codex}"`, `CODEX_SRC="$SRC_DIR/../codex"`.
-  - Whole-file: `AGENTS.md` → `claude/CLAUDE.md`; **skip** statusline / settings /
-    balance.
+  - Whole-file: `~/.codex/AGENTS.md` → `claude/AGENTS.md` (the canonical real file);
+    **skip** statusline / settings / balance.
   - Memory: `~/.codex/memory/global.md` + `practices.md` → `claude/memory/*`;
     `~/.codex/host-memory.md` → `claude/hosts/<host>.md` (reuse `host_id`).
   - Entry dirs: `skills` + `hooks` shared from `claude/`; `agents` from `codex/`.
@@ -152,7 +175,7 @@ This "Codex" is Claude-Code-compatible: same hooks-JSON schema, same
 
 - Sibling of `claude.nix`; same `mkOutOfStoreSymlink` + `linkEntries` pattern,
   targeting `.codex`.
-- Whole-file links: `.codex/AGENTS.md` → `claude/CLAUDE.md`;
+- Whole-file links: `.codex/AGENTS.md` → `claude/AGENTS.md`;
   `.codex/hooks.json` → `codex/hooks.json`.
 - Memory: `.codex/memory/global.md`, `.codex/memory/practices.md` →
   `claude/memory/*`; `.codex/host-memory.md` → `claude/hosts/<hostname>.md`.
