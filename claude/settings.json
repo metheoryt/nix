@@ -1,5 +1,21 @@
 {
-  "model": "opus",
+  "model": "claude-opus-4-8",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/hooks/gortex-onboard-check.sh\""
+          },
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/hooks/project-memory-check.sh\""
+          }
+        ]
+      }
+    ]
+  },
   "statusLine": {
     "type": "command",
     "command": "bash \"$HOME/.claude/statusline-command.sh\""
@@ -26,20 +42,5 @@
   "agentPushNotifEnabled": true,
   "voiceEnabled": true,
   "tui": "fullscreen",
-  "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$HOME/.claude/hooks/gortex-onboard-check.sh\""
-          },
-          {
-            "type": "command",
-            "command": "bash \"$HOME/.claude/hooks/project-memory-check.sh\""
-          }
-        ]
-      }
-    ]
-  }
+  "env": {}
 }
