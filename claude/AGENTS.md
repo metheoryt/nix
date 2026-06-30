@@ -177,10 +177,13 @@ Once the daemon is up, **call** `distill_session` next — surfaces decisions / 
 
 # Persistent memory (synced & version-controlled)
 
-The two files imported below are git-tracked in this repo (`claude/`) and
-symlinked into `~/.claude`, so anything recorded in them survives sessions and
-syncs across machines on commit + pull. They are loaded into EVERY session — be
-concise, and never put secrets in them.
+The memory stores (`memory/global.md`, `memory/practices.md`, and the per-host
+`host-memory.md`) are git-tracked in this repo (`claude/`) and symlinked into
+both `~/.claude` and `~/.codex`, so anything recorded in them survives sessions
+and syncs across machines on commit + pull. The `global-memory-load.sh`
+SessionStart hook injects them into EVERY session (it replaces the old
+`@memory/...` imports, which only Claude Code resolved — the hook works for Codex
+too). Be concise, and never put secrets in them.
 
 ## Recording a memory — pick the scope
 
@@ -196,18 +199,21 @@ the scoped file below instead of the default per-project memory dir:
   `CLAUDE.md`. The `project-memory-check.sh` SessionStart hook auto-loads
   `project.md` in every repo (merged with global + per-host memory) and offers
   to start tracking it where it doesn't exist yet — so it's git-tracked and
-  synced like the other scopes, with no per-repo `@import` wiring. For repos you
-  can't commit into, `CLAUDE.local.md` (add to its .gitignore).
+  synced like the other scopes, loaded by its SessionStart hook with no per-repo
+  wiring. For repos you can't commit into, `CLAUDE.local.md` (add to its
+  .gitignore).
 
 One bullet per fact under a topical `##` heading. Keep it curated — edit or
 delete stale entries rather than letting them pile up.
 
 ### Wiring — no per-project action needed
 
-- **Global + per-host** load in EVERY project automatically: `modules/home/claude.nix`
-  symlinks `CLAUDE.md`, `memory/global.md`, and `hosts/<hostname>.md` (as
-  `host-memory.md`) into `~/.claude` via `mkOutOfStoreSymlink`. Nothing to set up
-  per repo — commit here, pull on the other machine to propagate.
+- **Global + per-host** load in EVERY project automatically: `bootstrap.sh` /
+  `modules/home/claude.nix` symlink `memory/global.md`, `memory/practices.md`,
+  and `hosts/<hostname>.md` (as `host-memory.md`) into `~/.claude` (and
+  `~/.codex`), and the `global-memory-load.sh` SessionStart hook injects them
+  each session. Nothing to set up per repo — commit here, pull on the other
+  machine to propagate.
 - **Per-project** memory lives *inside the target repo* (its `CLAUDE.md` /
   `.claude/memory/project.md` / `CLAUDE.local.md`) and Claude auto-discovers it
   from the working directory. It is NOT wired through this flake — each repo
@@ -215,7 +221,3 @@ delete stale entries rather than letting them pile up.
 - **Not synced:** the harness auto-memory at `~/.claude/projects/<slug>/memory/`
   is path-keyed and machine-local — deliberately not symlinked here. Leave it
   local; don't expect it to follow you across machines.
-
-@memory/global.md
-@memory/practices.md
-@host-memory.md

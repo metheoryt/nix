@@ -6,8 +6,9 @@
 # mutually-exclusive behaviors:
 #   1. <repo>/.claude/memory/project.md EXISTS → inject its contents as session
 #      context. This is the LOADER: it's what makes per-repo memory merge with
-#      the global + per-host memory that claude/CLAUDE.md already @imports, with
-#      zero per-repo wiring (no @import needed in the repo's own CLAUDE.md).
+#      the global + per-host memory that the sibling global-memory-load.sh hook
+#      injects, with zero per-repo wiring (nothing needed in the repo's own
+#      CLAUDE.md).
 #   2. It does NOT exist → ask Claude ONCE to OFFER the user to start tracking
 #      repo-local memory (create the file, git-add it). The hook itself never
 #      creates anything — it only adds guidance to the session.

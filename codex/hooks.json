@@ -9,6 +9,10 @@
           },
           {
             "type": "command",
+            "command": "bash \"$HOME/.codex/hooks/global-memory-load.sh\""
+          },
+          {
+            "type": "command",
             "command": "bash \"$HOME/.codex/hooks/project-memory-check.sh\""
           }
         ]

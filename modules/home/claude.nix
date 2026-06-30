@@ -48,10 +48,11 @@ in {
       ".claude/statusline-command.sh".source = link "${claude}/statusline-command.sh";
       ".claude/balance-refresh.py".source = link "${claude}/balance-refresh.py";
 
-      # Memory & knowledge base (always-loaded CLAUDE.md hierarchy). Global
-      # instructions + global memory store are shared across machines; the
-      # per-host file is selected by this machine's hostname and surfaced as
-      # host-memory.md, which claude/CLAUDE.md @imports.
+      # Memory & knowledge base. Global instructions + memory stores are shared
+      # across machines; the per-host file is selected by this machine's hostname
+      # and surfaced as host-memory.md. The stores load each session via the
+      # global-memory-load.sh SessionStart hook (auto-discovered under hooks/),
+      # not via CLAUDE.md @imports.
       # AGENTS.md is canonical; ~/.claude/CLAUDE.md links straight to the real file.
       ".claude/CLAUDE.md".source = link "${claude}/AGENTS.md";
       ".claude/memory/global.md".source = link "${claude}/memory/global.md";

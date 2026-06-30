@@ -23,7 +23,7 @@ and pull on the other machines to propagate.** (See *Updating* below.)
 | `settings.json` | `settings.json` | statusline path is portable (`$HOME`) |
 | `statusline-command.sh` | `statusline-command.sh` | compact status line |
 | `balance-refresh.py` | `balance-refresh.py` | spend calculator (statusline depends on it) |
-| `AGENTS.md` | `CLAUDE.md` | canonical global instructions + memory imports (see below); `claude/CLAUDE.md` is a symlink → it, and `~/.codex/AGENTS.md` links here too |
+| `AGENTS.md` | `CLAUDE.md` | canonical global instructions; memory stores load via the `global-memory-load.sh` hook, not imports (see below); `claude/CLAUDE.md` is a symlink → it, and `~/.codex/AGENTS.md` links here too |
 | `memory/global.md` | `memory/global.md` | global persistent memory store |
 | `hosts/<host>.md` | `host-memory.md` | per-host memory, chosen by hostname |
 | `skills/update-balance/` | `skills/update-balance` | per-entry link |
@@ -64,12 +64,15 @@ so a fresh machine re-installs the declared plugins automatically.
 
 ## Memory & knowledge base (three scopes)
 
-Two distinct things share the always-loaded `CLAUDE.md` mechanism:
+Two distinct things load into every session:
 
-- **Instructions** you curate by hand.
+- **Instructions** you curate by hand, in the always-loaded `CLAUDE.md` /
+  `AGENTS.md`.
 - **Persistent memories** Claude records itself (preferences, confirmed
-  feedback, learned context). A "memory store" is just a markdown file that
-  `CLAUDE.md` `@import`s — so it's read every session and appended to over time.
+  feedback, learned context). A "memory store" is just a markdown file injected
+  every session by the `global-memory-load.sh` SessionStart hook — so it's read
+  each session and appended to over time. (This replaced `CLAUDE.md` `@import`s,
+  which only Claude Code resolved; the hook works for Codex too.)
 
 | Scope | Instructions (curated) | Memories (Claude-written) | Synced |
 |---|---|---|---|
@@ -77,18 +80,20 @@ Two distinct things share the always-loaded `CLAUDE.md` mechanism:
 | **Per-host** | `hosts/<host>.md` (one file holds both) | per host |
 | **Per-project** | each repo's own `CLAUDE.md` | that repo's `.claude/memory/project.md` (or `CLAUDE.local.md`) | per repo |
 
-`CLAUDE.md` ends with `@memory/global.md` and `@host-memory.md`, so both stores
-load into every session. `host-memory.md` is a symlink to `hosts/<hostname>.md`
-chosen per machine (`ME-G614JV`, `g16`, `latitude5520`, …) — a host with no file
-yet gets an empty stub seeded by `bootstrap.sh`. The per-project store
-(`<repo>/.claude/memory/project.md`) isn't `@import`ed — instead the
-`project-memory-check.sh` SessionStart hook loads it from whatever repo you're in
-(merged with global + per-host), and offers to start tracking it in repos that
+The `global-memory-load.sh` SessionStart hook injects `memory/global.md`,
+`memory/practices.md`, and `host-memory.md` into every session — so all three
+load regardless of cwd, in both Claude Code and Codex (it derives the config dir
+from its own path, so the one script serves `~/.claude` and `~/.codex`).
+`host-memory.md` is a symlink to `hosts/<hostname>.md` chosen per machine
+(`ME-G614JV`, `g16`, `latitude5520`, …) — a host with no file yet gets an empty
+stub seeded by `bootstrap.sh`. The per-project store
+(`<repo>/.claude/memory/project.md`) is loaded by the sibling
+`project-memory-check.sh` SessionStart hook from whatever repo you're in (merged
+with global + per-host), which also offers to start tracking it in repos that
 don't have one yet (silence per-repo with an empty `.claude/memory/.skip`).
-`CLAUDE.md` also carries a
-*"Recording a memory — pick the scope"* section telling Claude which file to
-append to; since `CLAUDE.md` outranks the default system prompt, that overrides
-the harness's built-in per-project memory dir.
+`CLAUDE.md` also carries a *"Recording a memory — pick the scope"* section
+telling Claude which file to append to; since `CLAUDE.md` outranks the default
+system prompt, that overrides the harness's built-in per-project memory dir.
 
 **These memory files are git-tracked** — a memory is committed when *you* commit
 (not auto-committed each write), and that commit + push + pull is how memories

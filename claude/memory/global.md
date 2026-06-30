@@ -2,7 +2,7 @@
 
 <!--
 Claude-written persistent memory, loaded into every session on every machine
-(imported by claude/CLAUDE.md). Append durable, CROSS-PROJECT facts here: who the
+(injected by the global-memory-load.sh hook). Append durable, CROSS-PROJECT facts here: who the
 user is, preferences that hold everywhere, confirmed feedback, long-running
 context. One bullet per fact under a topical heading. Keep it curated — edit or
 remove stale entries. Tracked in git: committed from this repo and pulled
