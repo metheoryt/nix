@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Bootstrap: symlink this repo's version-controlled Claude config (claude/) into
+# Bootstrap: symlink this repo's version-controlled agent config (agents/) into
 # the live Claude config dir so the same skills/agents/commands/statusline/
 # settings are reused on every machine. Portable baseline for Windows (Git Bash),
 # macOS and Linux. On NixOS/nix-darwin the same links are also declared in
@@ -10,7 +10,7 @@
 # from this repo and pull elsewhere to propagate.
 #
 # Idempotent. Re-run any time. Usage:
-#   bash claude/bootstrap.sh
+#   bash agents/bootstrap.sh
 set -u
 
 # ── Windows Git Bash: make `ln -s` create real native symlinks. Requires either
@@ -24,7 +24,7 @@ case "$(uname -s)" in
     ;;
 esac
 
-# Repo claude/ dir = the directory this script lives in (absolute).
+# Repo agents/ dir = the directory this script lives in (absolute).
 SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 # Backups go OUTSIDE the scanned skills/agents/commands dirs (a *.bak sibling
@@ -32,6 +32,17 @@ CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 BAK_ROOT="$CLAUDE_DIR/.bootstrap-bak"
 
 mkdir -p "$CLAUDE_DIR"
+
+# Personal profile gets personal-only files (settings.json) + Codex; secondary
+# profiles (e.g. ~/.claude-work via ccw) get the SHARED set only, so bootstrapping
+# from ccw never clobbers the work profile's own settings.json.
+_resolve() { readlink -f "$1" 2>/dev/null || printf '%s' "$1"; }
+if [ "$(_resolve "$CLAUDE_DIR")" = "$(_resolve "$HOME/.claude")" ]; then
+  IS_PERSONAL=1
+else
+  IS_PERSONAL=0
+  printf 'Secondary profile — linking SHARED set only (settings.json + Codex skipped)\n\n'
+fi
 
 linked=0
 skipped=0
@@ -134,10 +145,14 @@ link_entries_into() {
 
 printf 'Bootstrapping Claude config\n  repo:  %s\n  live:  %s\n\n' "$SRC_DIR" "$CLAUDE_DIR"
 
-# Whole-file links.
-for f in settings.json statusline-command.sh balance-refresh.py; do
+# Shared whole-file links (every profile).
+for f in statusline-command.sh balance-refresh.py; do
   link "$SRC_DIR/$f" "$CLAUDE_DIR/$f"
 done
+# Personal-only.
+if [ "$IS_PERSONAL" -eq 1 ]; then
+  link "$SRC_DIR/settings.json" "$CLAUDE_DIR/settings.json"
+fi
 
 # Memory & knowledge base. Global instructions + global memory store are shared
 # across all machines; the per-host file is chosen by hostname (imported by
@@ -149,7 +164,7 @@ mkdir -p "$CLAUDE_DIR/memory"
 link "$SRC_DIR/memory/global.md" "$CLAUDE_DIR/memory/global.md"
 link "$SRC_DIR/memory/practices.md" "$CLAUDE_DIR/memory/practices.md"
 
-# Per-host memory: link claude/hosts/<host>.md -> ~/.claude/host-memory.md. Seed
+# Per-host memory: link agents/hosts/<host>.md -> ~/.claude/host-memory.md. Seed
 # an empty stub in the repo the first time a new host runs this, so the import
 # never dangles (commit it to start recording host-scoped memory there).
 HOST_ID="$(host_id)"
@@ -159,7 +174,7 @@ if [ ! -e "$host_src" ]; then
   {
     printf '# Host: %s\n\n' "$HOST_ID"
     printf '<!--\nPer-host memory + instructions for this machine. Symlinked to\n'
-    printf '~/.claude/host-memory.md and imported by claude/CLAUDE.md, so it loads ONLY\n'
+    printf '~/.claude/host-memory.md and imported by ~/.claude/CLAUDE.md, so it loads ONLY\n'
     printf 'when the hostname matches. Tracked in git, synced everywhere, inert on other\n'
     printf 'hosts. Do NOT put secrets here.\n-->\n\n## Notes\n'
   } > "$host_src"
@@ -169,39 +184,32 @@ link "$host_src" "$CLAUDE_DIR/host-memory.md"
 
 # Entry-by-entry links (each skill subdir / agent file / command / hook).
 link_entries_into "$SRC_DIR/skills"   "$CLAUDE_DIR/skills"
-link_entries_into "$SRC_DIR/agents"   "$CLAUDE_DIR/agents"
+link_entries_into "$SRC_DIR/subagents" "$CLAUDE_DIR/agents"
 link_entries_into "$SRC_DIR/commands" "$CLAUDE_DIR/commands"
 link_entries_into "$SRC_DIR/hooks"    "$CLAUDE_DIR/hooks"
 
-# ── Codex config (~/.codex) ─────────────────────────────────────────────────
-# Codex is Claude-Code-compatible: it SHARES memory, hook scripts and skills from
-# claude/ (single source of truth); only the format-divergent files live in
-# codex/ (hooks.json, agents/*.toml). config.toml / auth / sessions stay
-# machine-local — see codex/.gitignore. HOST_ID / host_src are reused from the
-# Claude section above.
-CODEX_SRC="$(cd "$SRC_DIR/../codex" && pwd)"
-CODEX_DIR="${CODEX_CONFIG_DIR:-$HOME/.codex}"
-mkdir -p "$CODEX_DIR"
-printf '\nBootstrapping Codex config\n  live:  %s\n\n' "$CODEX_DIR"
+# ── Codex config (~/.codex) — rides with the personal run only ───────────────
+if [ "$IS_PERSONAL" -eq 1 ]; then
+  CODEX_SRC="$SRC_DIR/codex"
+  CODEX_DIR="${CODEX_CONFIG_DIR:-$HOME/.codex}"
+  mkdir -p "$CODEX_DIR"
+  printf '\nBootstrapping Codex config\n  live:  %s\n\n' "$CODEX_DIR"
 
-# Instruction file: Codex reads AGENTS.md; point at claude/AGENTS.md (canonical).
-link "$SRC_DIR/AGENTS.md" "$CODEX_DIR/AGENTS.md"
+  link "$SRC_DIR/AGENTS.md" "$CODEX_DIR/AGENTS.md"
 
-# Shared memory & per-host file (same sources Claude uses).
-mkdir -p "$CODEX_DIR/memory"
-link "$SRC_DIR/memory/global.md"    "$CODEX_DIR/memory/global.md"
-link "$SRC_DIR/memory/practices.md" "$CODEX_DIR/memory/practices.md"
-link "$host_src"                    "$CODEX_DIR/host-memory.md"
+  mkdir -p "$CODEX_DIR/memory"
+  link "$SRC_DIR/memory/global.md"    "$CODEX_DIR/memory/global.md"
+  link "$SRC_DIR/memory/practices.md" "$CODEX_DIR/memory/practices.md"
+  link "$host_src"                    "$CODEX_DIR/host-memory.md"
 
-# Codex-specific standalone hooks file.
-link "$CODEX_SRC/hooks.json" "$CODEX_DIR/hooks.json"
+  link "$CODEX_SRC/hooks.json" "$CODEX_DIR/hooks.json"
 
-# Entry dirs: skills + hook scripts shared from claude/; agents from codex/.
-link_entries_into "$SRC_DIR/skills"   "$CODEX_DIR/skills"
-link_entries_into "$SRC_DIR/hooks"    "$CODEX_DIR/hooks"
-link_entries_into "$CODEX_SRC/agents" "$CODEX_DIR/agents"
+  link_entries_into "$SRC_DIR/skills"       "$CODEX_DIR/skills"
+  link_entries_into "$SRC_DIR/hooks"        "$CODEX_DIR/hooks"
+  link_entries_into "$CODEX_SRC/subagents"  "$CODEX_DIR/agents"
+fi
 
-# Auto-refresh: point this clone's git hooks at claude/git-hooks so future pulls
+# Auto-refresh: point this clone's git hooks at agents/git-hooks so future pulls
 # (merge / rebase / checkout) re-link without a manual bootstrap run. core.hooksPath
 # is LOCAL (per-clone) config, so this only affects this checkout. Skipped on NixOS,
 # where `nixos-rebuild switch` owns the links — the hooks no-op there anyway.
@@ -240,7 +248,7 @@ if [ "$failed" -gt 0 ]; then
 On Windows, creating symlinks requires elevated rights. Enable ONE of:
   • Developer Mode: Settings → Privacy & security → For developers → Developer Mode = On
   • or run Git Bash "as Administrator"
-Then re-run:  bash claude/bootstrap.sh
+Then re-run:  bash agents/bootstrap.sh
 (Your live config was left intact — originals were restored from backup.)
 EOF
   fi

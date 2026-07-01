@@ -3,7 +3,7 @@
 # changes (pull / rebase / checkout), so a new hook/skill/agent/command added on
 # another machine is wired up without remembering to run bootstrap by hand.
 #
-# Installed as core.hooksPath by claude/bootstrap.sh; the post-merge /
+# Installed as core.hooksPath by agents/bootstrap.sh; the post-merge /
 # post-rewrite / post-checkout entrypoints in this dir all exec this script.
 #
 # No-op on NixOS, where `nixos-rebuild switch` (modules/home/claude.nix) owns the
@@ -15,7 +15,7 @@ set -u
 [ -e /etc/NIXOS ] && exit 0
 
 repo="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
-boot="$repo/claude/bootstrap.sh"
+boot="$repo/agents/bootstrap.sh"
 [ -f "$boot" ] || exit 0
 
 out="$(bash "$boot" 2>&1)"

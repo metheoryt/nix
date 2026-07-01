@@ -1,6 +1,6 @@
-# Claude Code config, version-controlled in this repo under claude/ and symlinked
+# Claude Code config, version-controlled in this repo under agents/ and symlinked
 # into ~/.claude. This is the idiomatic nix path for Linux/macOS; Windows uses
-# claude/bootstrap.sh (which produces the identical symlinks).
+# agents/bootstrap.sh (which produces the identical symlinks).
 #
 # mkOutOfStoreSymlink points the live config straight at the repo working tree
 # (not a read-only /nix/store copy), so:
@@ -16,37 +16,34 @@
 # for `switch` to pick it up; bootstrap reads the working tree directly.)
 #
 # Secrets, transcripts, caches and plugins/ are intentionally NOT linked — they
-# stay machine-local in ~/.claude (see claude/.gitignore for the full list).
+# stay machine-local in ~/.claude (see agents/.gitignore for the full list).
 {
   config,
   osConfig,
   lib,
   ...
 }: let
-  # Repo checkout location on this machine. The fish helpers cd to ~/nix, so the
-  # flake lives there. Change this if you clone the repo elsewhere.
-  claude = "${config.home.homeDirectory}/nix/claude";
+  # Repo agents/ dir on this machine (fish helpers cd to ~/nix, which is the flake).
+  agents = "${config.home.homeDirectory}/nix/agents";
   link = config.lib.file.mkOutOfStoreSymlink;
 
-  # Symlink each entry inside claude/<sub> into ~/.claude/<sub>, individually
-  # (not the whole dir) so machine-local skills/agents added directly in
-  # ~/.claude keep working alongside the tracked ones. `srcDir` is the in-tree
-  # path literal (used only to enumerate names — pure-eval safe); the symlink
-  # target stays the out-of-store `claude` string so edits are live.
-  linkEntries = sub: srcDir:
+  # Link each entry inside a source subdir into ~/.claude/<targetSub>/ individually.
+  # targetSub and srcSub differ only for subagents (source `subagents/`, target the
+  # tool-dictated `agents/`). srcDir is the in-tree literal (enumeration only).
+  linkEntries = targetSub: srcSub: srcDir:
     lib.mapAttrs'
     (name: _:
-      lib.nameValuePair ".claude/${sub}/${name}" {
-        source = link "${claude}/${sub}/${name}";
+      lib.nameValuePair ".claude/${targetSub}/${name}" {
+        source = link "${agents}/${srcSub}/${name}";
       })
     (lib.filterAttrs (name: _: name != ".gitkeep") (builtins.readDir srcDir));
 in {
   home.file =
     {
       # Whole-file links.
-      ".claude/settings.json".source = link "${claude}/settings.json";
-      ".claude/statusline-command.sh".source = link "${claude}/statusline-command.sh";
-      ".claude/balance-refresh.py".source = link "${claude}/balance-refresh.py";
+      ".claude/settings.json".source = link "${agents}/settings.json";
+      ".claude/statusline-command.sh".source = link "${agents}/statusline-command.sh";
+      ".claude/balance-refresh.py".source = link "${agents}/balance-refresh.py";
 
       # Memory & knowledge base. Global instructions + memory stores are shared
       # across machines; the per-host file is selected by this machine's hostname
@@ -54,14 +51,14 @@ in {
       # global-memory-load.sh SessionStart hook (auto-discovered under hooks/),
       # not via CLAUDE.md @imports.
       # AGENTS.md is canonical; ~/.claude/CLAUDE.md links straight to the real file.
-      ".claude/CLAUDE.md".source = link "${claude}/AGENTS.md";
-      ".claude/memory/global.md".source = link "${claude}/memory/global.md";
-      ".claude/memory/practices.md".source = link "${claude}/memory/practices.md";
-      ".claude/host-memory.md".source = link "${claude}/hosts/${osConfig.networking.hostName}.md";
+      ".claude/CLAUDE.md".source = link "${agents}/AGENTS.md";
+      ".claude/memory/global.md".source = link "${agents}/memory/global.md";
+      ".claude/memory/practices.md".source = link "${agents}/memory/practices.md";
+      ".claude/host-memory.md".source = link "${agents}/hosts/${osConfig.networking.hostName}.md";
     }
     # Auto-discovered entry dirs (kept in sync with bootstrap.sh's link_entries).
-    // linkEntries "hooks" ../../claude/hooks
-    // linkEntries "skills" ../../claude/skills
-    // linkEntries "agents" ../../claude/agents
-    // linkEntries "commands" ../../claude/commands;
+    // linkEntries "hooks" "hooks" ../../agents/hooks
+    // linkEntries "skills" "skills" ../../agents/skills
+    // linkEntries "agents" "subagents" ../../agents/subagents
+    // linkEntries "commands" "commands" ../../agents/commands;
 }
