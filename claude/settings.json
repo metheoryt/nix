@@ -1,5 +1,5 @@
 {
-  "model": "claude-opus-4-8",
+  "env": {},
   "hooks": {
     "SessionStart": [
       {
@@ -39,13 +39,13 @@
       }
     }
   },
+  "advisorModel": "opus",
   "autoUpdatesChannel": "latest",
+  "tui": "fullscreen",
   "voice": {
     "enabled": true,
     "mode": "hold"
   },
   "agentPushNotifEnabled": true,
-  "voiceEnabled": true,
-  "tui": "fullscreen",
-  "env": {}
+  "voiceEnabled": true
 }
