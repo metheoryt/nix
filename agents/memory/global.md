@@ -31,7 +31,44 @@ elsewhere to sync. Do NOT put secrets here.
   - Scope commits to coherent units; don't sweep unrelated in-progress work into
     one commit. If the tree mixes concerns, surface it rather than lumping.
 
+- **Never destroy the last copy of a secret.** Don't delete a backup/stash of a
+  credential on the reasoning that it's "reconstructable" from other files —
+  those other files can change or vanish too. Keep at least one intact copy
+  until the secret is verified in its new home. (Learned the hard way: deleted
+  a `settings.json.backup` holding a Sentry token, then the sibling
+  `settings.local.json` copy also disappeared → token lost, user had to
+  regenerate.)
+
+- **Verify Claude Code's file-reading before designing around it.** Empirically
+  confirmed for a user config dir (`CLAUDE_CONFIG_DIR`): only `settings.json` is
+  read at the config-dir ROOT — a config-root `settings.local.json` **and** a
+  config-root `.env` are NOT read. Reliable ways to get env into a session (and
+  its Bash-tool subprocesses): (a) a var in the launching process env, or
+  (b) a PROJECT-scope `<repo>/.claude/settings.local.json` `env` (this is the
+  one place `settings.local.json` is honored). Test with a throwaway
+  `CLAUDE_CONFIG_DIR` + `printenv` probe rather than assuming.
+
 ## Context
+
+## Communication — professional tone (outward-facing)
+
+- **Applies to everything a human other than me reads** — PR titles/bodies,
+  commit messages, Jira/Confluence comments, Slack, email, review comments.
+  NOT in-session chat replies to me. This generalizes the pure-dev
+  review-voice card + the PR "why, not what" rule into one tone for all such
+  output; the plugin's `review-voice.md` stays the detailed, review-specific
+  version.
+- **Lean.** As few sentences as carry the point; cut preamble, restatement,
+  and ceremony. Say *why*, not *what* — the diff / thread / artifact already
+  shows the what.
+- **No hype, no padding.** Don't inflate praise; no marketing gloss,
+  superlatives, or filler adjectives. Plain over clever; obvious beats terse.
+- **Honest and humble.** When I might be missing context, say so — it invites
+  correction. Don't overstate confidence or paper over unknowns.
+- **Opinion, not orders — but direct when it's clear.** For judgment calls,
+  convey a view and let the reader decide. When something is plainly right or
+  broken, say it directly. Directness tracks stakes: soft/optional on
+  low-stakes, unambiguous on important. Courteous throughout.
 
 ## Gortex
 

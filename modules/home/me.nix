@@ -20,6 +20,8 @@ in {
     ./claude.nix
     # Codex config: shares claude/ content, codex/-specific files, symlinked into ~/.codex
     ./codex.nix
+    # RustDesk: seed self-hosted server + known peers (seed-only, see module)
+    ./rustdesk-config.nix
   ];
 
   home.username = "me";
@@ -178,6 +180,9 @@ in {
       nrb = "sudo nixos-rebuild boot --flake .#${hostname}";
 
       cc = "claude";
+      # Work profile. The Sentry secret is NOT delivered here — it lives in each
+      # work repo's project-scope .claude/settings.local.json (gitignored), which
+      # Claude reads natively. (A config-dir-root settings.local.json is NOT read.)
       ccw = "CLAUDE_CONFIG_DIR=~/.claude-work claude";
 
       df = "df -h";
@@ -308,7 +313,7 @@ in {
       font-family = "JetBrainsMono Nerd Font";
       font-size = 10;
       shell-integration = "fish";
-      theme = "Desert";
+      theme = "Belafonte Day";
       quit-after-last-window-closed = true;
       desktop-notifications = false;
       gtk-titlebar = false;

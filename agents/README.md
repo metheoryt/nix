@@ -1,8 +1,9 @@
 # Claude Code config (version-controlled)
 
-The Claude Code user config — skills, agents, commands, statusline and
-`settings.json` — lives here and is **symlinked into `~/.claude`** so the same
-setup is reused on every machine (Windows 11 / Git Bash, macOS, Linux).
+The Claude Code user config — skills, agents, commands, statusline and a
+committed per-profile `settings.json` — lives here and is **symlinked into both
+`~/.claude` (personal) and `~/.claude-work` (work)** so the same setup is reused
+on every machine (Windows 11 / Git Bash, macOS, Linux).
 
 Because `~/.claude` is the *user-level* config, these skills/plugins/agents are
 active in **every repo** you open Claude Code in — not just this one. And since
@@ -20,30 +21,35 @@ and pull on the other machines to propagate.** (See *Updating* below.)
 
 | Path | Linked into `~/.claude` as | Notes |
 |---|---|---|
-| `settings.json` | `settings.json` | statusline path is portable (`$HOME`) |
+| `settings.personal.json` | `~/.claude/settings.json` | personal profile config (committed) |
+| `settings.work.json` | `~/.claude-work/settings.json` | work profile config (committed; no secret). The Sentry secret is NOT here — it lives in each work repo's project-scope `.claude/settings.local.json` (gitignored), which Claude reads natively. A config-dir-root `settings.local.json` is NOT read. |
 | `statusline-command.sh` | `statusline-command.sh` | compact status line |
 | `balance-refresh.py` | `balance-refresh.py` | spend calculator (statusline depends on it) |
-| `AGENTS.md` | `CLAUDE.md` | canonical global instructions; memory stores load via the `global-memory-load.sh` hook, not imports (see below); `claude/CLAUDE.md` is a symlink → it, and `~/.codex/AGENTS.md` links here too |
+| `AGENTS.md` | `CLAUDE.md` | canonical global instructions; memory stores load via the `global-memory-load.sh` hook, not imports (see below); `agents/CLAUDE.md` is a symlink → it, and `~/.codex/AGENTS.md` links here too |
 | `memory/global.md` | `memory/global.md` | global persistent memory store |
 | `hosts/<host>.md` | `host-memory.md` | per-host memory, chosen by hostname |
 | `skills/update-balance/` | `skills/update-balance` | per-entry link |
-| `agents/quick-tasks.md` | `agents/quick-tasks.md` | per-entry link |
+| `subagents/quick-tasks.md` | `agents/quick-tasks.md` | per-entry link — source lives in `subagents/`, target dir is the tool-dictated `agents/` |
 | `commands/` | `commands/` (per-entry) | empty for now (`.gitkeep`) |
 
-`skills/`, `agents/` and `commands/` are linked **entry-by-entry**, so any
+`skills/`, `subagents/` and `commands/` are linked **entry-by-entry**, so any
 machine-local skill/agent you drop directly into `~/.claude` keeps working
-alongside the tracked ones.
+alongside the tracked ones. (The source dir is `subagents/` — named that way
+because `agents/` at the repo root is already this whole config tree; the
+symlinks still land in the tool-dictated `~/.claude/agents/`.)
 
 ### Codex (`~/.codex`) — same setup, shared content
 
 Codex is Claude-Code-compatible, so it reuses **this** config as its source of
 truth rather than a separate copy. The tool-agnostic content here — `memory/`,
 `hooks/`, `skills/`, and the canonical `AGENTS.md` — is symlinked into **both**
-`~/.claude` and `~/.codex`. Only the format-divergent files live in the
-repo-root `codex/` dir (`hooks.json`, `agents/*.toml`) and link into `~/.codex`
-alone. Machine-local Codex state (`config.toml`, `auth.json`, sessions, caches)
-is git-ignored (`codex/.gitignore`) and never tracked. Both `bootstrap.sh` and
-`modules/home/codex.nix` produce the identical `~/.codex` tree — the same
+`~/.claude` and `~/.codex`. Only the format-divergent files live under
+`agents/codex/` (`hooks.json`, `subagents/*.toml`) and link into `~/.codex`
+alone — the `.toml` subagent defs land at `~/.codex/agents/*.toml`, the same
+tool-dictated target dirname Claude uses, just read by a different tool.
+Machine-local Codex state (`config.toml`, `auth.json`, sessions, caches) is
+git-ignored (`agents/codex/.gitignore`) and never tracked. Both `bootstrap.sh`
+and `modules/home/codex.nix` produce the identical `~/.codex` tree — the same
 dual-mechanism model as the Claude side.
 
 ## What's NOT tracked (and never copy in)
@@ -109,11 +115,31 @@ Never put secrets in any tracked memory file.
 
 ```bash
 git clone <this repo> ~/nix      # or wherever you keep it
-bash ~/nix/claude/bootstrap.sh
+bash ~/nix/agents/bootstrap.sh
 ```
 
 `bootstrap.sh` honors `$CLAUDE_CONFIG_DIR` (defaults to `~/.claude`), backs up
 any existing real file to `<name>.bak` before linking, and is idempotent.
+
+### Per-profile bootstrap
+
+From this repo, prefer the `just` recipes over calling the script directly:
+
+- `just agent-bootstrap` — the **personal** profile: `~/.claude` + `~/.codex`,
+  forced personal even if `$CLAUDE_CONFIG_DIR` is set elsewhere in your shell
+  (`env -u CLAUDE_CONFIG_DIR bash agents/bootstrap.sh`).
+- `just agent-bootstrap-work` — a **secondary** profile, e.g. `~/.claude-work`
+  (invoked as `ccw`): links the SHARED set (`AGENTS.md`→`CLAUDE.md`, `memory/`,
+  `hosts/`→`host-memory.md`, `hooks/`, `skills/`, `subagents/`, `commands/`,
+  `statusline-command.sh`, `balance-refresh.py`) **plus** the committed
+  `settings.work.json` → `settings.json`. It never touches the machine-local
+  `settings.local.json` (which holds the profile's Sentry secret) or its Codex
+  config (`CLAUDE_CONFIG_DIR="$HOME/.claude-work" bash agents/bootstrap.sh`).
+  On NixOS this profile is also managed by `just switch` (see the nix section).
+
+Direct invocation, if you need something other than those two: `bash
+agents/bootstrap.sh` (personal) or `CLAUDE_CONFIG_DIR=<dir> bash
+agents/bootstrap.sh` (any other profile — SHARED set + `settings.work.json`).
 
 ### Windows note — Developer Mode
 
@@ -148,7 +174,7 @@ The links are live, so the loop is just normal git:
 
 1. Edit a skill/agent/statusline/etc. — either here, or via `~/.claude/...`
    while working in *any* other repo (it's the same file through the symlink).
-2. `cd ~/nix && git add claude/ && git commit && git push`.
+2. `cd ~/nix && git add agents/ && git commit && git push`.
 3. On the other machines: `git pull`. Edits to already-linked files are live
    immediately (no step). New *files* need their symlink created — but that's
    now automatic (see below).
@@ -160,7 +186,7 @@ After that first run installs the git-hook auto-refresh, you don't re-run it by
 hand:
 
 - **Non-nix machines (Windows/macOS):** `bootstrap.sh` points this clone's
-  `core.hooksPath` at `claude/git-hooks/`, so `post-merge` / `post-rewrite` /
+  `core.hooksPath` at `agents/git-hooks/`, so `post-merge` / `post-rewrite` /
   `post-checkout` re-link automatically after every `git pull` /
   `pull --rebase` / checkout. Silent when nothing changed; prints a one-liner
   when it links a new entry. (If *you* already set a custom `core.hooksPath`,
@@ -168,10 +194,11 @@ hand:
 - **NixOS laptops:** `just switch` owns the links; the git hooks no-op there.
 
 **No manual sync between the two mechanisms.** Both `bootstrap.sh`
-(`link_entries`) and `modules/home/claude.nix` (`linkEntries` via `readDir`)
-auto-discover everything under `hooks/`, `skills/`, `agents/`, `commands/`. Drop
-a new file in one of those dirs and commit it — nothing else to wire up. (nix
-reads git-*tracked* files, so commit the new entry for `switch` to see it;
+(`link_entries_into`) and `modules/home/claude.nix` (`linkEntries` via
+`readDir`) auto-discover everything under `hooks/`, `skills/`, `subagents/`,
+`commands/` (source dirs — they land in the tool-dictated `~/.claude/agents/`).
+Drop a new file in one of those dirs and commit it — nothing else to wire up.
+(nix reads git-*tracked* files, so commit the new entry for `switch` to see it;
 `bootstrap.sh` reads the working tree and links it right away.)
 
 ---
