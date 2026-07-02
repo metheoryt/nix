@@ -218,6 +218,28 @@ in {
           sudo nixos-rebuild switch --flake ~/nix#${hostname}
         '';
       };
+      ghostty-theme = {
+        description = "Switch Ghostty theme live (no rebuild): writes theme.conf + reloads";
+        body = ''
+          set -l cfg ~/.config/ghostty/theme.conf
+          if test (count $argv) -eq 0
+              if test -e $cfg
+                  echo "current: "(string replace 'theme = ' "" < $cfg)
+              end
+              echo "usage: ghostty-theme <name>   (browse: ghostty +list-themes)"
+              return 0
+          end
+          set -l name (string join ' ' $argv)
+          printf 'theme = %s\n' $name >$cfg
+          # Reload every running Ghostty. Prefer the systemd unit; fall back to SIGUSR2.
+          if command -q systemctl; and systemctl --user is-active -q app-com.mitchellh.ghostty.service
+              systemctl --user reload app-com.mitchellh.ghostty.service
+          else
+              pkill -SIGUSR2 -x ghostty
+          end
+          echo "ghostty theme → $name"
+        '';
+      };
     };
 
     interactiveShellInit = ''
@@ -313,7 +335,13 @@ in {
       font-family = "JetBrainsMono Nerd Font";
       font-size = 10;
       shell-integration = "fish";
-      theme = "Belafonte Day";
+      # Theme lives in a MUTABLE include (~/.config/ghostty/theme.conf) instead of
+      # here, so it can be switched live (ghostty-theme fn + SIGUSR2 reload) without
+      # a rebuild. The nix-managed config is a read-only store symlink; theme.conf is
+      # seeded by the ghosttyThemeSeed activation below. "?" = don't error if absent.
+      # NOTE: keep `theme` OUT of these settings — HM renders keys alphabetically, so
+      # a `theme` here would sort AFTER config-file and override the include.
+      config-file = "?theme.conf";
       quit-after-last-window-closed = true;
       desktop-notifications = false;
       gtk-titlebar = false;
@@ -326,6 +354,17 @@ in {
       ];
     };
   };
+
+  # Seed the mutable theme include ONCE (never overwrites a user-set value), so a
+  # fresh machine gets the default theme. Switch it later with `ghostty-theme <name>`.
+  home.activation.ghosttyThemeSeed =
+    config.lib.dag.entryAfter ["writeBoundary"] ''
+      cfg="$HOME/.config/ghostty/theme.conf"
+      if [ ! -e "$cfg" ]; then
+        mkdir -p "$(dirname "$cfg")"
+        printf 'theme = %s\n' 'Belafonte Day' > "$cfg"
+      fi
+    '';
 
   dconf = {
     enable = true;
