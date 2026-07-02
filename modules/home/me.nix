@@ -232,10 +232,12 @@ in {
           set -l name (string join ' ' $argv)
           printf 'theme = %s\n' $name >$cfg
           # Reload every running Ghostty. Prefer the systemd unit; fall back to SIGUSR2.
+          # -x/-f by comm name doesn't work: the nix wrapper's real process shows up as
+          # ".ghostty-wrappe" (comm truncated at 15 chars), so match the argv path instead.
           if command -q systemctl; and systemctl --user is-active -q app-com.mitchellh.ghostty.service
               systemctl --user reload app-com.mitchellh.ghostty.service
           else
-              pkill -SIGUSR2 -x ghostty
+              pkill -SIGUSR2 -f '/bin/ghostty$'
           end
           echo "ghostty theme → $name"
         '';
