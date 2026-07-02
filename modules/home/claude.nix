@@ -9,7 +9,7 @@
 # Commit from this repo and pull on the other machines to propagate.
 #
 # The entry-dir links (hooks/skills/agents/commands) are AUTO-DISCOVERED from the
-# filesystem via `linkEntries`, mirroring bootstrap.sh's `link_entries`. That's
+# filesystem via `linkEntries`, mirroring bootstrap.sh's `link_entries_into`. That's
 # what keeps this file in sync with bootstrap.sh: adding a hook/skill/agent/
 # command needs NO edit here — both mechanisms derive the same set from the repo.
 # (readDir reads the flake source, i.e. git-tracked files, so commit a new entry
@@ -56,7 +56,7 @@ in {
       ".claude/memory/practices.md".source = link "${agents}/memory/practices.md";
       ".claude/host-memory.md".source = link "${agents}/hosts/${osConfig.networking.hostName}.md";
     }
-    # Auto-discovered entry dirs (kept in sync with bootstrap.sh's link_entries).
+    # Auto-discovered entry dirs (kept in sync with bootstrap.sh's link_entries_into).
     // linkEntries "hooks" "hooks" ../../agents/hooks
     // linkEntries "skills" "skills" ../../agents/skills
     // linkEntries "agents" "subagents" ../../agents/subagents
