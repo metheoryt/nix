@@ -33,15 +33,16 @@ BAK_ROOT="$CLAUDE_DIR/.bootstrap-bak"
 
 mkdir -p "$CLAUDE_DIR"
 
-# Personal profile gets personal-only files (settings.json) + Codex; secondary
-# profiles (e.g. ~/.claude-work via ccw) get the SHARED set only, so bootstrapping
-# from ccw never clobbers the work profile's own settings.json.
+# Both profiles get the SHARED set + a committed per-profile settings.json
+# (personal -> settings.personal.json, secondary -> settings.work.json). Codex
+# rides with the personal run only. The machine-local settings.local.json is
+# never touched by either profile.
 _resolve() { readlink -f "$1" 2>/dev/null || printf '%s' "$1"; }
 if [ "$(_resolve "$CLAUDE_DIR")" = "$(_resolve "$HOME/.claude")" ]; then
   IS_PERSONAL=1
 else
   IS_PERSONAL=0
-  printf 'Secondary profile — linking SHARED set only (settings.json + Codex skipped)\n\n'
+  printf 'Secondary profile — SHARED set + settings.work.json (Codex skipped, settings.local.json untouched)\n\n'
 fi
 
 linked=0
@@ -149,9 +150,14 @@ printf 'Bootstrapping Claude config\n  repo:  %s\n  live:  %s\n\n' "$SRC_DIR" "$
 for f in statusline-command.sh balance-refresh.py; do
   link "$SRC_DIR/$f" "$CLAUDE_DIR/$f"
 done
-# Personal-only.
+# settings.json is committed per-profile: personal -> settings.personal.json,
+# any secondary profile -> settings.work.json. The machine-local
+# settings.local.json (personal: gortex hooks; work: PURE_SENTRY_TOKEN secret)
+# is never linked — it stays local and is reunited at load via env deep-merge.
 if [ "$IS_PERSONAL" -eq 1 ]; then
-  link "$SRC_DIR/settings.json" "$CLAUDE_DIR/settings.json"
+  link "$SRC_DIR/settings.personal.json" "$CLAUDE_DIR/settings.json"
+else
+  link "$SRC_DIR/settings.work.json" "$CLAUDE_DIR/settings.json"
 fi
 
 # Memory & knowledge base. Global instructions + global memory store are shared
