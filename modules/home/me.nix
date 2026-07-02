@@ -310,7 +310,7 @@ in {
       font-family = "JetBrainsMono Nerd Font";
       font-size = 10;
       shell-integration = "fish";
-      theme = "Desert";
+      theme = "Belafonte Day";
       quit-after-last-window-closed = true;
       desktop-notifications = false;
       gtk-titlebar = false;
