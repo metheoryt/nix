@@ -20,6 +20,8 @@ in {
     ./claude.nix
     # Codex config: shares claude/ content, codex/-specific files, symlinked into ~/.codex
     ./codex.nix
+    # RustDesk: seed self-hosted server + known peers (seed-only, see module)
+    ./rustdesk-config.nix
   ];
 
   home.username = "me";
