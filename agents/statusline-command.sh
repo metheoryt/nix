@@ -31,6 +31,12 @@ done
 R='\033[0;31m'; Y='\033[0;33m'; G='\033[0;32m'; C='\033[0;36m'
 B='\033[0;34m'; M='\033[0;35m'; DIM='\033[2m'; RESET='\033[0m'
 
+# ── OSC 8 hyperlink: real ESC bytes so terminals render <label> as clickable ──
+# Emits  ESC]8;;<url>ESC\ <label> ESC]8;;ESC\  — terminals that support OSC 8
+# (iTerm2, WezTerm, kitty, VTE, Windows Terminal) make <label> a link; others
+# just show <label>. The final output uses printf '%s' so these bytes survive.
+hyperlink() { printf '\033]8;;%s\033\\%s\033]8;;\033\\' "$1" "$2"; }
+
 # ── Extract a JSON field by dotted path ───────────────────────────────────────
 jget() {
   printf '%s' "$input" | "$PY" -c "
@@ -415,6 +421,75 @@ if [ -n "$cwd" ] && git -C "$cwd" rev-parse --is-inside-work-tree >/dev/null 2>&
   fi
 fi
 
+# ── 2b. Jira ticket + GitHub PR links for the branch (clickable, OSC 8) ───────
+# Jira key parsed from the branch (…/CFT-1234-…) → thepureapp browse URL.
+# PR read from a short-TTL cache; a stale/missing cache kicks a detached,
+# lock-guarded `gh pr view` refresh so the status line never blocks on the net.
+# Glyph tracks review state: 🔀 open · ✅ approved · 🔧 changes requested · 📝 draft.
+link_str=""
+if [ -n "$branch" ]; then
+  jira=$(printf '%s' "$branch" | grep -Eio 'CFT-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]')
+  if [ -n "$jira" ]; then
+    link_str=$(printf "${Y}🎫%s${RESET}" "$(hyperlink "https://thepureapp.atlassian.net/browse/$jira" "$jira")")
+  fi
+fi
+if [ -n "$branch" ] && [ -n "$cwd" ] && command -v gh >/dev/null 2>&1; then
+  root=$(git -C "$cwd" --no-optional-locks rev-parse --show-toplevel 2>/dev/null)
+  if [ -n "$root" ]; then
+    cache_dir="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/pr-cache"
+    mkdir -p "$cache_dir" 2>/dev/null
+    key=$(printf '%s|%s' "$root" "$branch" | cksum | cut -d' ' -f1)
+    cache_file="$cache_dir/$key.json"; PR_TTL=300; age=999999
+    if [ -f "$cache_file" ]; then
+      mtime=$(date -r "$cache_file" +%s 2>/dev/null); [ -z "$mtime" ] && mtime=0
+      age=$(( $(date +%s) - mtime ))
+      read -r pr_num pr_url pr_state < <("$PY" - "$cache_file" <<'PYEOF' 2>/dev/null
+import json, sys
+try:
+    d = json.load(open(sys.argv[1], encoding="utf-8"))
+except Exception:
+    d = {}
+num, url = d.get("number"), d.get("url")
+if num and url:
+    rd = (d.get("reviewDecision") or "").upper()
+    state = ("draft" if d.get("isDraft") else "approved" if rd == "APPROVED"
+             else "changes" if rd == "CHANGES_REQUESTED" else "open")
+    print(num, url, state)
+PYEOF
+)
+      if [ -n "${pr_num:-}" ]; then
+        glyph="🔀"
+        [ "$pr_state" = "approved" ] && glyph="✅"
+        [ "$pr_state" = "changes" ] && glyph="🔧"
+        [ "$pr_state" = "draft" ] && glyph="📝"
+        pr_seg=$(printf "${G}%s%s${RESET}" "$glyph" "$(hyperlink "$pr_url" "#$pr_num")")
+        [ -n "$link_str" ] && link_str="$link_str "
+        link_str="$link_str$pr_seg"
+      fi
+    fi
+    # Stale/missing cache → refresh once in the background (never block here).
+    if [ "$age" -ge "$PR_TTL" ]; then
+      lock="$cache_file.lock"; lock_age=999999
+      if [ -f "$lock" ]; then
+        lmtime=$(date -r "$lock" +%s 2>/dev/null); [ -z "$lmtime" ] && lmtime=0
+        lock_age=$(( $(date +%s) - lmtime ))
+      fi
+      if [ "$lock_age" -ge 60 ]; then
+        : > "$lock" 2>/dev/null
+        (
+          cd "$root" 2>/dev/null || exit
+          pr_json=$(gh pr view --json number,url,reviewDecision,isDraft 2>/dev/null)
+          [ -z "$pr_json" ] && pr_json='{}'
+          printf '%s' "$pr_json" > "$cache_file.tmp" 2>/dev/null \
+            && mv "$cache_file.tmp" "$cache_file" 2>/dev/null
+          rm -f "$lock" 2>/dev/null
+        ) >/dev/null 2>&1 &
+        disown 2>/dev/null || true
+      fi
+    fi
+  fi
+fi
+
 # ── 3. Model family glyph + name ─────────────────────────────────────────────
 model_str=""
 [ -n "$model_name" ] && model_str=$(printf "${DIM}$(model_glyph_name "$model_name")${RESET}")
@@ -534,11 +609,13 @@ profile_str=""
 # ── Assemble with dim │ separators ───────────────────────────────────────────
 sep=$(printf "${DIM}│${RESET}")
 out=""
-for p in "$project_str" "$git_str" "$model_str" "$rl_str" "$ctx_str" "$api_str" "$profile_str"; do
+for p in "$project_str" "$git_str" "$link_str" "$model_str" "$rl_str" "$ctx_str" "$api_str" "$profile_str"; do
   [ -z "$p" ] && continue
   if [ -z "$out" ]; then out="$p"; else out="${out} ${sep} ${p}"; fi
 done
 
 # Title on its own first line (when available), then the compact gauges line.
-[ -n "$title_str" ] && printf '%b\n' "$title_str"
-printf '%b\n' "$out"
+# %s (not %b): every segment above is already built with printf, so its ANSI/OSC
+# escapes are real bytes — %b would re-interpret the OSC 8 backslashes and break links.
+[ -n "$title_str" ] && printf '%s\n' "$title_str"
+printf '%s\n' "$out"
